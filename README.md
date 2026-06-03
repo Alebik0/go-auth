@@ -16,10 +16,30 @@ Just a simple web application
 
 Authentification and inner API expose
 
+#### Tasks:
+
+- [ ] Run frontend via React + Vite
+
+#### Tasks:
+
+- [ ] Test Redis
+- [ ] Test user authorization via JWT tokens
+- [ ] CORS support
+- [ ] CSRF protection
+
 ### User service
 
 User API to manage user profiles. Interacts with the database.
 
+#### Tasks:
+
+- [ ] Test Gin framework
+- [ ] Test Swagger
+
 ### Database
 
 Just a simple PostgreSQL database.
+
+#### Tasks:
+
+- [ ] Run a simple database
