@@ -42,4 +42,4 @@ Just a simple PostgreSQL database.
 
 #### Tasks:
 
-- [ ] Run a simple database
+- [x] Run a simple database
