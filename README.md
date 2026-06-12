@@ -12,13 +12,13 @@ Just a simple microservice architecture, that can be seen on that image:
 
 Just a simple web application
 
-### API Gateway
-
-Authentification and inner API expose
-
 #### Tasks:
 
 - [ ] Run frontend via React + Vite
+
+### API Gateway
+
+Authentification and inner API expose
 
 #### Tasks:
 
