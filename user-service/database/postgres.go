@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,14 +15,17 @@ type PostgresAPI struct {
 	database *sql.DB
 }
 
+var (
+	UserNotFound = fmt.Errorf("user not found")
+)
+
 func prepareDatabase(db *sql.DB) error {
 	log.Println("Prepare database: create tables if not exists")
 
 	query := `
+DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    login VARCHAR(64) NOT NULL UNIQUE,
-    password_hash VARCHAR(128) NOT NULL,
     name VARCHAR(64) NOT NULL,
 	description VARCHAR(1024) NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -35,7 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
 	return nil
 }
 
-func NewPostgresAPI(host string, port uint16, user, password, database string, connectTimeout time.Duration) (PostgresAPI, error) {
+func NewPostgresAPI(host string, port uint16, user, password, database string, connectTimeout time.Duration) (*PostgresAPI, error) {
 	log.Println("Create postgres API")
 
 	cfg := pq.Config{
@@ -50,51 +54,80 @@ func NewPostgresAPI(host string, port uint16, user, password, database string, c
 
 	c, err := pq.NewConnectorConfig(cfg)
 	if err != nil {
-		return PostgresAPI{}, fmt.Errorf("failed create connection config: %v", err)
+		return nil, fmt.Errorf("failed create connection config: %v", err)
 	}
 
 	db := sql.OpenDB(c)
+
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
 
 	log.Println("Ping postgres database")
 	err = db.Ping()
 	if err != nil {
 		db.Close()
-		return PostgresAPI{}, fmt.Errorf("failed ping server: %v", err)
+		return nil, fmt.Errorf("failed ping server: %v", err)
 	}
 
+	log.Println("Prepare postgres database")
 	err = prepareDatabase(db)
 	if err != nil {
 		db.Close()
-		return PostgresAPI{}, fmt.Errorf("failed prepare database: %v", err)
+		return nil, fmt.Errorf("failed prepare database: %v", err)
 	}
 
-	return PostgresAPI{database: db}, nil
+	log.Println("Created postgres API")
+
+	return &PostgresAPI{database: db}, nil
 }
 
 func (api *PostgresAPI) Close() error {
 	return api.database.Close()
 }
 
-func (api *PostgresAPI) CreateUser(user UserData) error {
-	return nil
+func (api *PostgresAPI) CreateUser(name, description string) (UserData, error) {
+	query := "INSERT INTO users (name, description) VALUES ($1, $2) RETURNING id;"
+	userData := UserData{
+		Name:        name,
+		Description: description,
+	}
+	err := api.database.QueryRow(query, name, description).Scan(&userData.ID)
+	if err != nil {
+		return userData, fmt.Errorf("failed to scan row: %v", err)
+	}
+	return userData, nil
 }
 
 func (api *PostgresAPI) ReadUser(id uint32) (UserData, error) {
-	var userData UserData
-	err := api.database.QueryRow("SELECT * FROM users WHERE id=$1", id).Scan(&userData.ID, &userData.Login, &userData.PasswordHash, &userData.Name, &userData.Description)
-	if err == sql.ErrNoRows {
-		return userData, fmt.Errorf("user not found")
-	} else if err != nil {
+	query := "SELECT id, name, description FROM users WHERE id = $1;"
+	userData := UserData{}
+	err := api.database.QueryRow(query, id).Scan(&userData.ID, &userData.Name, &userData.Description)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return userData, UserNotFound
+		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
-	} else {
-		return userData, nil
 	}
+	return userData, nil
 }
 
-func (api *PostgresAPI) UpdateUser(id uint32, name, description *string) error {
-	return nil
+func (api *PostgresAPI) UpdateUser(id uint32, name, description string) (UserData, error) {
+	query := "UPDATE users SET name = $1, description = $2 WHERE id=$3 RETURNING id, name, description;"
+	userData := UserData{}
+	err := api.database.QueryRow(query, name, description, id).Scan(&userData.ID, &userData.Name, &userData.Description)
+	if err != nil {
+		return userData, fmt.Errorf("failed to scan row: %v", err)
+	}
+	return userData, nil
 }
 
 func (api *PostgresAPI) DeleteUser(id uint32) (UserData, error) {
-	return UserData{}, nil
+	query := "DELETE FROM users WHERE id=$1 RETURNING id, name, description;"
+	userData := UserData{}
+	err := api.database.QueryRow(query, id).Scan(&userData.ID, &userData.Name, &userData.Description)
+	if err != nil {
+		return userData, fmt.Errorf("failed to scan row: %v", err)
+	}
+	return userData, nil
 }
