@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
+	"os"
 
-	docs "github.com/alebik0/go-auth/user-service/docs"
+	"github.com/alebik0/go-auth/user-service/docs"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -38,14 +39,19 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	v1 := router.Group("/api/v1")
 	{
-		routerGroup := v1.Group("/example")
-		routerGroup.POST("/user", createUser)
-		routerGroup.GET("/user/:id", readUser)
-		routerGroup.PUT("/user/:id", updateUser)
-		routerGroup.DELETE("/user/:id", deleteUser)
+		routerGroup := v1.Group("/user")
+		routerGroup.POST("", createUser)
+		routerGroup.GET("/:id", readUser)
+		routerGroup.PUT("/:id", updateUser)
+		routerGroup.DELETE("/:id", deleteUser)
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	log.Println("Running server on port 8080")
-	router.Run(":8080")
+	port := os.Getenv("USER_SERVICE_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Running server on port %s", port)
+	router.Run(":" + port)
 }

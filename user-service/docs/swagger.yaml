@@ -6,6 +6,20 @@ definitions:
         example: just a random internal error
         type: string
     type: object
+  main.CreateUserData:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  main.UpdateUserData:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -17,7 +31,63 @@ info:
   title: User service
   version: "1.0"
 paths:
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Creates user in the Postgres database and returns created user
+        as a JSON object
+      parameters:
+      - description: Create user parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateUserData'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Create user CRUD operation
+      tags:
+      - User
   /user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user from the Postgres database and returns deleted user
+        as a JSON object
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Delete user CRUD operation
+      tags:
+      - User
     get:
       consumes:
       - application/json
@@ -36,7 +106,7 @@ paths:
           schema:
             $ref: '#/definitions/main.APIError'
         "404":
-          description: Item not found
+          description: User not found
           schema:
             $ref: '#/definitions/main.APIError'
         "500":
@@ -44,6 +114,41 @@ paths:
           schema:
             $ref: '#/definitions/main.APIError'
       summary: Read user CRUD operation
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Updates user in the Postgres database and returns updated user
+        as a JSON object
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateUserData'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Update user CRUD operation
       tags:
       - User
 swagger: "2.0"

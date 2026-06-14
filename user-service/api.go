@@ -33,7 +33,7 @@ type APIError struct {
 // @Produce     json
 // @Param       id path int true "User ID"
 // @Failure     400 {object} APIError "Bad request"
-// @Failure     404 {object} APIError "Item not found"
+// @Failure     404 {object} APIError "User not found"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /user/{id} [get]
 func readUser(context *gin.Context) {
@@ -57,6 +57,17 @@ func readUser(context *gin.Context) {
 	}
 }
 
+// @Summary     Update user CRUD operation
+// @Description Updates user in the Postgres database and returns updated user as a JSON object
+// @Tags        User
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "User ID"
+// @Param   	parameters body UpdateUserData true "Update parameters"
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     404 {object} APIError "User not found"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /user/{id} [put]
 func updateUser(context *gin.Context) {
 	log.Println("Update user")
 
@@ -84,10 +95,19 @@ func updateUser(context *gin.Context) {
 	}
 }
 
+// @Summary     Create user CRUD operation
+// @Description Creates user in the Postgres database and returns created user as a JSON object
+// @Tags        User
+// @Accept      json
+// @Produce     json
+// @Param   	parameters body CreateUserData true "Create user parameters"
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /user [post]
 func createUser(context *gin.Context) {
 	log.Println("Create user")
 
-	var body UpdateUserData
+	var body CreateUserData
 	if err := context.ShouldBindBodyWithJSON(&body); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -102,6 +122,16 @@ func createUser(context *gin.Context) {
 	}
 }
 
+// @Summary     Delete user CRUD operation
+// @Description Delete user from the Postgres database and returns deleted user as a JSON object
+// @Tags        User
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "User ID"
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     404 {object} APIError "User not found"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /user/{id} [delete]
 func deleteUser(context *gin.Context) {
 	log.Println("Delete user")
 
