@@ -22,6 +22,20 @@ type CreateUserData struct {
 	Description string `json:"description"`
 }
 
+type APIError struct {
+	Error string `json:"error" example:"just a random internal error"`
+}
+
+// @Summary     Read user CRUD operation
+// @Description Reads user from Postgres database and returns as a JSON object
+// @Tags        User
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "User ID"
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     404 {object} APIError "Item not found"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /user/{id} [get]
 func readUser(context *gin.Context) {
 	log.Println("Read user")
 
