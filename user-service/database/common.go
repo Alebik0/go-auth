@@ -10,7 +10,7 @@ type DatabaseAPI interface {
 }
 
 type UserData struct {
-	ID          uint32
-	Name        string
-	Description string
+	ID          uint32 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }

@@ -117,6 +117,9 @@ func (api *PostgresAPI) UpdateUser(id uint32, name, description string) (UserDat
 	userData := UserData{}
 	err := api.database.QueryRow(query, name, description, id).Scan(&userData.ID, &userData.Name, &userData.Description)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return userData, UserNotFound
+		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
 	}
 	return userData, nil
@@ -127,6 +130,9 @@ func (api *PostgresAPI) DeleteUser(id uint32) (UserData, error) {
 	userData := UserData{}
 	err := api.database.QueryRow(query, id).Scan(&userData.ID, &userData.Name, &userData.Description)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return userData, UserNotFound
+		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
 	}
 	return userData, nil
