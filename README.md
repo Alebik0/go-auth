@@ -33,8 +33,8 @@ User API to manage user profiles. Interacts with the database.
 
 #### Tasks:
 
-- [ ] Test Gin framework
-- [ ] Test Swagger
+- [x] Test Gin framework
+- [x] Test Swagger
 
 ### Database
 
