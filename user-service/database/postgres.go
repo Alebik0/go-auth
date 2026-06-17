@@ -64,7 +64,7 @@ func NewPostgresAPI(host string, port uint16, user, password, database string, c
 	if err != nil {
 		err := db.Close()
 		if err != nil {
-			log.Printf("[WARN] Failed to close database: %w", err)
+			log.Printf("[WARN] Failed to close database: %v", err)
 		}
 
 		return nil, fmt.Errorf("failed ping server: %v", err)
@@ -75,7 +75,7 @@ func NewPostgresAPI(host string, port uint16, user, password, database string, c
 	if err != nil {
 		err := db.Close()
 		if err != nil {
-			log.Printf("[WARN] Failed to close database: %w", err)
+			log.Printf("[WARN] Failed to close database: %v", err)
 		}
 
 		return nil, fmt.Errorf("failed prepare database: %v", err)

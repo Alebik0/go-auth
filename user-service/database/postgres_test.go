@@ -19,7 +19,7 @@ func TestCreate(t *testing.T) {
 	defer func() {
 		innerErr := api.Close()
 		if innerErr != nil {
-			t.Logf("[WARN] Failed to close database: %w", innerErr)
+			t.Logf("[WARN] Failed to close database: %v", innerErr)
 		}
 	}()
 
@@ -58,7 +58,7 @@ func TestRead(t *testing.T) {
 	defer func() {
 		innerErr := api.Close()
 		if innerErr != nil {
-			t.Logf("[WARN] Failed to close database: %w", innerErr)
+			t.Logf("[WARN] Failed to close database: %v", innerErr)
 		}
 	}()
 
@@ -97,7 +97,7 @@ func TestUpdate(t *testing.T) {
 	defer func() {
 		innerErr := api.Close()
 		if innerErr != nil {
-			t.Logf("[WARN] Failed to close database: %w", innerErr)
+			t.Logf("[WARN] Failed to close database: %v", innerErr)
 		}
 	}()
 
@@ -136,7 +136,7 @@ func TestDelete(t *testing.T) {
 	defer func() {
 		innerErr := api.Close()
 		if innerErr != nil {
-			t.Logf("[WARN] Failed to close database: %w", innerErr)
+			t.Logf("[WARN] Failed to close database: %v", innerErr)
 		}
 	}()
 

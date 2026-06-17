@@ -50,7 +50,7 @@ func main() {
 	defer func() {
 		innerErr := handler.Close()
 		if innerErr != nil {
-			log.Printf("[WARN] Failed to close handler: %w", innerErr)
+			log.Printf("[WARN] Failed to close handler: %v", innerErr)
 		}
 	}()
 
