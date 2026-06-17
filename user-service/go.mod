@@ -3,7 +3,9 @@ module github.com/alebik0/go-auth/user-service
 go 1.25.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gin-gonic/gin v1.12.0
+	github.com/go-openapi/testify/v2 v2.5.1
 	github.com/lib/pq v1.12.3
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1

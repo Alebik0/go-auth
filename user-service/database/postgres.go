@@ -15,10 +15,6 @@ type PostgresAPI struct {
 	database *sql.DB
 }
 
-var (
-	UserNotFound = fmt.Errorf("user not found")
-)
-
 func prepareDatabase(db *sql.DB) error {
 	log.Println("Prepare database: create tables if not exists")
 

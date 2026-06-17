@@ -1,5 +1,7 @@
 package database
 
+import "fmt"
+
 // CRUD user API
 type DatabaseAPI interface {
 	CreateUser(name, description string) (UserData, error)
@@ -14,3 +16,7 @@ type UserData struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+var (
+	UserNotFound = fmt.Errorf("user not found")
+)

@@ -8,6 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Handler struct {
+	application App
+}
+
+func (h *Handler) Close() error {
+	return h.application.Close()
+}
+
+func NewHaldler(app App) Handler {
+	return Handler{application: app}
+}
+
 type UserRequestParameters struct {
 	ID uint32 `uri:"id"`
 }
@@ -36,7 +48,7 @@ type APIError struct {
 // @Failure     404 {object} APIError "User not found"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /user/{id} [get]
-func readUser(context *gin.Context) {
+func (h *Handler) readUser(context *gin.Context) {
 	log.Println("Read user")
 
 	var parameters UserRequestParameters
@@ -45,7 +57,7 @@ func readUser(context *gin.Context) {
 		return
 	}
 
-	userData, err := app.Database.ReadUser(parameters.ID)
+	userData, err := h.application.Database.ReadUser(parameters.ID)
 	if err == database.UserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -68,7 +80,7 @@ func readUser(context *gin.Context) {
 // @Failure     404 {object} APIError "User not found"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /user/{id} [put]
-func updateUser(context *gin.Context) {
+func (h *Handler) updateUser(context *gin.Context) {
 	log.Println("Update user")
 
 	var parameters UserRequestParameters
@@ -83,7 +95,7 @@ func updateUser(context *gin.Context) {
 		return
 	}
 
-	userData, err := app.Database.UpdateUser(parameters.ID, body.Name, body.Description)
+	userData, err := h.application.Database.UpdateUser(parameters.ID, body.Name, body.Description)
 	if err == database.UserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -104,7 +116,7 @@ func updateUser(context *gin.Context) {
 // @Failure     400 {object} APIError "Bad request"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /user [post]
-func createUser(context *gin.Context) {
+func (h *Handler) createUser(context *gin.Context) {
 	log.Println("Create user")
 
 	var body CreateUserData
@@ -113,7 +125,7 @@ func createUser(context *gin.Context) {
 		return
 	}
 
-	userData, err := app.Database.CreateUser(body.Name, body.Description)
+	userData, err := h.application.Database.CreateUser(body.Name, body.Description)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -132,7 +144,7 @@ func createUser(context *gin.Context) {
 // @Failure     404 {object} APIError "User not found"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /user/{id} [delete]
-func deleteUser(context *gin.Context) {
+func (h *Handler) deleteUser(context *gin.Context) {
 	log.Println("Delete user")
 
 	var parameters UserRequestParameters
@@ -141,7 +153,7 @@ func deleteUser(context *gin.Context) {
 		return
 	}
 
-	userData, err := app.Database.DeleteUser(parameters.ID)
+	userData, err := h.application.Database.DeleteUser(parameters.ID)
 	if err == database.UserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
