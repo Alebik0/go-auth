@@ -71,10 +71,6 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/main.APIError'
         "401":
           description: Unauthorized
           schema:
@@ -84,6 +80,25 @@ paths:
           schema:
             $ref: '#/definitions/main.APIError'
       summary: Logout user
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access token for user
+      produces:
+      - application/json
+      responses:
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Refresh access token
       tags:
       - Auth
   /api/v1/auth/register:

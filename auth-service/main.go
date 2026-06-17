@@ -37,7 +37,7 @@ func SetupRouter(handler Handler) *gin.Engine {
 		routerGroup.POST("login", handler.login)
 		routerGroup.POST("logout", handler.logout)
 		routerGroup.POST("register", handler.register)
-		// routerGroup.POST("refresh", handler.refresh)
+		routerGroup.POST("refresh", handler.refresh)
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
