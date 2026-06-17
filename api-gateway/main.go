@@ -9,12 +9,10 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 var hmacSecret = os.Getenv("AUTH_SERVICE_HMAC_SECRET")
@@ -40,45 +38,36 @@ func NewReverseProxy(target string) *httputil.ReverseProxy {
 	return proxy
 }
 
-func AuthMiddleware() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		const prefix = "Bearer "
-		accessToken := context.GetHeader("Authorization")
-		if !strings.HasPrefix(accessToken, prefix) {
-			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
-			return
-		}
-		accessToken = strings.TrimPrefix(accessToken, prefix)
-
-		var claims jwt.RegisteredClaims
-		_, err := jwt.ParseWithClaims(
-			accessToken,
-			&claims,
-			func(token *jwt.Token) (any, error) {
-				return hmacSecret, nil
-			},
-			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
-		)
-		if err != nil {
-			context.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("invalid token: %v", err)})
-			return
-		}
-
-		context.Request.Header.Set("X-User-ID", claims.Subject)
-		context.Request.Header.Set("X-User-Role", strings.Join(claims.Audience, " "))
-		context.Next()
+func SetupRouter() (*gin.Engine, error) {
+	userServiceHost := os.Getenv("USER_SERVICE_HOST")
+	if userServiceHost == "" {
+		return nil, fmt.Errorf("USER_SERVICE_HOST is mandatory environment variable")
 	}
-}
 
-func SetupRouter() *gin.Engine {
+	userServicePort := os.Getenv("USER_SERVICE_PORT")
+	if userServicePort == "" {
+		return nil, fmt.Errorf("USER_SERVICE_PORT is mandatory environment variable")
+	}
+
+	authServiceHost := os.Getenv("AUTH_SERVICE_HOST")
+	if authServiceHost == "" {
+		return nil, fmt.Errorf("AUTH_SERVICE_HOST is mandatory environment variable")
+	}
+
+	authServicePort := os.Getenv("AUTH_SERVICE_PORT")
+	if authServicePort == "" {
+		return nil, fmt.Errorf("AUTH_SERVICE_PORT is mandatory environment variable")
+	}
+
+	userService := NewReverseProxy(fmt.Sprintf("http://%s:%s", userServiceHost, userServicePort))
+	authService := NewReverseProxy(fmt.Sprintf("http://%s:%s", authServiceHost, authServicePort))
+
 	router := gin.Default()
-
-	userService := NewReverseProxy("http://localhost:8080")
-	authService := NewReverseProxy("http://localhost:8081")
 
 	v1 := router.Group("/api/v1")
 	{
 		public := v1.Group("/")
+		public.Use(CleanAuthMiddleware())
 		{
 			auth := public.Group("/auth")
 			{
@@ -122,16 +111,18 @@ func SetupRouter() *gin.Engine {
 				})
 			}
 		}
-
 	}
 
-	return router
+	return router, nil
 }
 
 func main() {
 	log.SetPrefix("[API_GATEWAY] ")
 
-	router := SetupRouter()
+	router, err := SetupRouter()
+	if err != nil {
+		log.Fatalf("Failed to setup router: %v", err)
+	}
 
 	port := os.Getenv("API_GATEWAY_PORT")
 	if port == "" {
