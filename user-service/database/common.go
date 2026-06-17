@@ -18,5 +18,5 @@ type UserData struct {
 }
 
 var (
-	UserNotFound = fmt.Errorf("user not found")
+	ErrUserNotFound = fmt.Errorf("user not found")
 )

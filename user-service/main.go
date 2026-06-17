@@ -47,7 +47,12 @@ func main() {
 		log.Fatalf("Failed create app: %v", err)
 	}
 	handler := NewHaldler(app)
-	defer handler.Close()
+	defer func() {
+		innerErr := handler.Close()
+		if innerErr != nil {
+			log.Printf("[WARN] Failed to close handler: %w", innerErr)
+		}
+	}()
 
 	router := SetupRouter(handler)
 

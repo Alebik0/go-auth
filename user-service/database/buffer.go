@@ -28,7 +28,7 @@ func (api *BufferDatabaseAPI) CreateUser(name, description string) (UserData, er
 func (api *BufferDatabaseAPI) ReadUser(id uint32) (UserData, error) {
 	userData, ok := api.data[id]
 	if !ok {
-		return userData, UserNotFound
+		return userData, ErrUserNotFound
 	}
 	return userData, nil
 }
@@ -36,7 +36,7 @@ func (api *BufferDatabaseAPI) ReadUser(id uint32) (UserData, error) {
 func (api *BufferDatabaseAPI) UpdateUser(id uint32, name, description string) (UserData, error) {
 	userData, ok := api.data[id]
 	if !ok {
-		return userData, UserNotFound
+		return userData, ErrUserNotFound
 	}
 	newUserData := UserData{
 		ID:          userData.ID,
@@ -51,7 +51,7 @@ func (api *BufferDatabaseAPI) UpdateUser(id uint32, name, description string) (U
 func (api *BufferDatabaseAPI) DeleteUser(id uint32) (UserData, error) {
 	userData, ok := api.data[id]
 	if !ok {
-		return userData, UserNotFound
+		return userData, ErrUserNotFound
 	}
 
 	delete(api.data, id)

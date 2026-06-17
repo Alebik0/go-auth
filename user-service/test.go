@@ -77,7 +77,7 @@ func testAPI() {
 
 	log.Printf("Read user (again x2)")
 	_, err = app.Database.ReadUser(user.ID)
-	if err != database.UserNotFound {
+	if err != database.ErrUserNotFound {
 		log.Fatalf("Expected UserNotFound, but got: %v", err)
 	}
 

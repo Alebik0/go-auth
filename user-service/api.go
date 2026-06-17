@@ -58,7 +58,7 @@ func (h *Handler) readUser(context *gin.Context) {
 	}
 
 	userData, err := h.application.Database.ReadUser(parameters.ID)
-	if err == database.UserNotFound {
+	if err == database.ErrUserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	} else if err != nil {
@@ -96,7 +96,7 @@ func (h *Handler) updateUser(context *gin.Context) {
 	}
 
 	userData, err := h.application.Database.UpdateUser(parameters.ID, body.Name, body.Description)
-	if err == database.UserNotFound {
+	if err == database.ErrUserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	} else if err != nil {
@@ -154,7 +154,7 @@ func (h *Handler) deleteUser(context *gin.Context) {
 	}
 
 	userData, err := h.application.Database.DeleteUser(parameters.ID)
-	if err == database.UserNotFound {
+	if err == database.ErrUserNotFound {
 		context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	} else if err != nil {

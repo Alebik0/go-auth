@@ -16,7 +16,12 @@ func TestCreate(t *testing.T) {
 	require.NoError(t, err)
 
 	api := &PostgresAPI{database: db}
-	defer api.Close()
+	defer func() {
+		innerErr := api.Close()
+		if innerErr != nil {
+			t.Logf("[WARN] Failed to close database: %w", innerErr)
+		}
+	}()
 
 	t.Logf("Prepare mock")
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
@@ -50,7 +55,12 @@ func TestRead(t *testing.T) {
 	require.NoError(t, err)
 
 	api := &PostgresAPI{database: db}
-	defer api.Close()
+	defer func() {
+		innerErr := api.Close()
+		if innerErr != nil {
+			t.Logf("[WARN] Failed to close database: %w", innerErr)
+		}
+	}()
 
 	t.Logf("Prepare mock")
 	rows := sqlmock.NewRows([]string{"id", "name", "description"}).AddRow(1, "hello", "world")
@@ -84,7 +94,12 @@ func TestUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	api := &PostgresAPI{database: db}
-	defer api.Close()
+	defer func() {
+		innerErr := api.Close()
+		if innerErr != nil {
+			t.Logf("[WARN] Failed to close database: %w", innerErr)
+		}
+	}()
 
 	t.Logf("Prepare mock")
 	rows := sqlmock.NewRows([]string{"id", "name", "description"}).AddRow(1, "hello", "new world")
@@ -118,7 +133,12 @@ func TestDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	api := &PostgresAPI{database: db}
-	defer api.Close()
+	defer func() {
+		innerErr := api.Close()
+		if innerErr != nil {
+			t.Logf("[WARN] Failed to close database: %w", innerErr)
+		}
+	}()
 
 	t.Logf("Prepare mock")
 	rows := sqlmock.NewRows([]string{"id", "name", "description"}).AddRow(1, "hello", "world")

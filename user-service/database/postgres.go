@@ -62,14 +62,22 @@ func NewPostgresAPI(host string, port uint16, user, password, database string, c
 	log.Println("Ping postgres database")
 	err = db.Ping()
 	if err != nil {
-		db.Close()
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %w", err)
+		}
+
 		return nil, fmt.Errorf("failed ping server: %v", err)
 	}
 
 	log.Println("Prepare postgres database")
 	err = prepareDatabase(db)
 	if err != nil {
-		db.Close()
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %w", err)
+		}
+
 		return nil, fmt.Errorf("failed prepare database: %v", err)
 	}
 
@@ -101,7 +109,7 @@ func (api *PostgresAPI) ReadUser(id uint32) (UserData, error) {
 	err := api.database.QueryRow(query, id).Scan(&userData.ID, &userData.Name, &userData.Description)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return userData, UserNotFound
+			return userData, ErrUserNotFound
 		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
 	}
@@ -114,7 +122,7 @@ func (api *PostgresAPI) UpdateUser(id uint32, name, description string) (UserDat
 	err := api.database.QueryRow(query, name, description, id).Scan(&userData.ID, &userData.Name, &userData.Description)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return userData, UserNotFound
+			return userData, ErrUserNotFound
 		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
 	}
@@ -127,7 +135,7 @@ func (api *PostgresAPI) DeleteUser(id uint32) (UserData, error) {
 	err := api.database.QueryRow(query, id).Scan(&userData.ID, &userData.Name, &userData.Description)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return userData, UserNotFound
+			return userData, ErrUserNotFound
 		}
 		return userData, fmt.Errorf("failed to scan row: %v", err)
 	}
