@@ -16,7 +16,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: user-service
+        working-directory: self-hosted
 
     steps:
       - name: Checkout code
