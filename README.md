@@ -22,8 +22,8 @@ Authentification and inner API expose
 
 #### Tasks:
 
-- [ ] Test Redis
-- [ ] Test user authorization via JWT tokens
+- [x] Test Redis
+- [x] Test user authorization via JWT tokens
 - [ ] CORS support
 - [ ] CSRF protection
 
