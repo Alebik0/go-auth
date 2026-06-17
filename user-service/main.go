@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/alebik0/go-auth/user-service/docs"
 	"github.com/gin-gonic/gin"
@@ -62,5 +67,30 @@ func main() {
 	}
 
 	log.Printf("Running server on port %s", port)
-	router.Run(":" + port)
+
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed to listen and server: %v", err)
+		}
+	}()
+
+	log.Printf("Wait for interrupt signal")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Printf("Graceful shutdown")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Failed to gracefully shutdown server: %v", err)
+	}
+
+	log.Printf("Bye bye (˶ᵔᗜᵔ˶)ﾉﾞ")
 }
