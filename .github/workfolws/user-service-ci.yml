@@ -1,0 +1,51 @@
+name: User Service CI
+
+on:
+  push:
+    paths:
+      - "user-service/**"
+      - ".github/workflows/user-service-ci.yml"
+  pull_request:
+    paths:
+      - "user-service/**"
+      - ".github/workflows/user-service-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: user-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: user-service/go.mod
+          cache-dependency-path: user-service/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify module dependencies
+        run: go mod tidy -diff
+
+      - name: Run gofmt check
+        run: |
+          test -z "$(gofmt -l .)"
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: user-service
+
+      - name: Run tests
+        run: go test -v ./...
