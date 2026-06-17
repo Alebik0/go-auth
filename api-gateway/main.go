@@ -71,7 +71,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func SetupRouter(handler Handler) *gin.Engine {
+func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
 	userService := NewReverseProxy("http://localhost:8080")
@@ -130,18 +130,7 @@ func SetupRouter(handler Handler) *gin.Engine {
 func main() {
 	log.SetPrefix("[API_GATEWAY] ")
 
-	handler, err := NewHaldler()
-	if err != nil {
-		log.Fatalf("Failed create app: %v", err)
-	}
-	defer func() {
-		innerErr := handler.Close()
-		if innerErr != nil {
-			log.Printf("[WARN] Failed to close handler: %v", innerErr)
-		}
-	}()
-
-	router := SetupRouter(handler)
+	router := SetupRouter()
 
 	port := os.Getenv("API_GATEWAY_PORT")
 	if port == "" {
