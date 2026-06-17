@@ -1,0 +1,59 @@
+basePath: /api/v1
+definitions:
+  main.APIError:
+    properties:
+      error:
+        example: just a random internal error
+        type: string
+    type: object
+  main.RegisterRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    name: Alebik0
+  description: Authentification service API, that provides authentification functionality
+    and session control via JWT tokens.
+  license:
+    name: MIT
+    url: https://mit-license.org
+  title: Authentification service
+  version: "1.0"
+paths:
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers new user with the provided login and password and returns,
+        login must be unique
+      parameters:
+      - description: Login parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "409":
+          description: 'Conflict: login is already taken'
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Registers new user
+      tags:
+      - Auth
+swagger: "2.0"
