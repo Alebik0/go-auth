@@ -6,6 +6,13 @@ definitions:
         example: just a random internal error
         type: string
     type: object
+  main.LoginRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
   main.RegisterRequest:
     properties:
       login:
@@ -25,14 +32,68 @@ info:
   title: Authentification service
   version: "1.0"
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logins user with the provided login and password and returns, checks
+        if provided password is correct via checking password hash match
+      parameters:
+      - description: Login parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Login user
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logouts current user
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Logout user
+      tags:
+      - Auth
   /api/v1/auth/register:
     post:
       consumes:
       - application/json
-      description: Registers new user with the provided login and password and returns,
-        login must be unique
+      description: Registers new user with the provided login and password, login
+        must be unique
       parameters:
-      - description: Login parameters
+      - description: Register parameters
         in: body
         name: parameters
         required: true

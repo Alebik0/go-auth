@@ -2,10 +2,12 @@ package main
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alebik0/go-auth/auth-service/database"
@@ -28,10 +30,13 @@ type RegisterResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-type Claims struct {
-	UserID           uint32   `json:"user_id"`
-	Roles            []string `json:"roles"`
-	RegisteredClaims jwt.RegisteredClaims
+type LoginRequest struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	AccessToken string `json:"access_token"`
 }
 
 type APIError struct {
@@ -39,11 +44,11 @@ type APIError struct {
 }
 
 // @Summary     Registers new user
-// @Description Registers new user with the provided login and password and returns, login must be unique
+// @Description Registers new user with the provided login and password, login must be unique
 // @Tags        Auth
 // @Accept      json
 // @Produce     json
-// @Param   	parameters body RegisterRequest true "Login parameters"
+// @Param   	parameters body RegisterRequest true "Register parameters"
 // @Failure     400 {object} APIError "Bad request"
 // @Failure     409 {object} APIError "Conflict: login is already taken"
 // @Failure     500 {object} APIError "Internal server error"
@@ -123,7 +128,6 @@ func (handler *Handler) register(context *gin.Context) {
 		true,
 		true,
 	)
-	context.Header("Content-Type", "application/json")
 	context.IndentedJSON(http.StatusOK, registerResponse)
 }
 
@@ -158,4 +162,147 @@ func generateRefreshToken() (string, error) {
 	}
 
 	return string(token), nil
+}
+
+// @Summary     Login user
+// @Description Logins user with the provided login and password and returns, checks if provided password is correct via checking password hash match
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param   	parameters body LoginRequest true "Login parameters"
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     401 {object} APIError "Unauthorized"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /api/v1/auth/login [post]
+func (handler *Handler) login(context *gin.Context) {
+	log.Println("Login user")
+
+	var parameters RegisterRequest
+	if err := context.ShouldBindBodyWithJSON(&parameters); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	authData, err := handler.AuthAPI.ReadAuthByLogin(parameters.Login)
+	if err == database.ErrAuthNotFound {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid login"})
+		return
+	} else if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(authData.PasswordHash), []byte(parameters.Password))
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		return
+	}
+
+	userData, err := handler.UserAPI.ReadUser(authData.ProfileID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	accessToken, err := generateAccessToken(handler.hmacSecret, userData)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	refreshToken, err := generateRefreshToken()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = handler.JwtAPI.Save(
+		context.Request.Context(),
+		refreshToken,
+		strconv.FormatInt(int64(userData.ID), 10),
+		time.Now().Add(30*24*time.Hour),
+	)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	registerResponse := RegisterResponse{
+		AccessToken: accessToken,
+	}
+
+	context.SetCookie(
+		"refresh_token",
+		refreshToken,
+		int((30 * 24 * time.Hour).Seconds()),
+		"/api/v1/auth",
+		"",
+		true,
+		true,
+	)
+	context.IndentedJSON(http.StatusOK, registerResponse)
+}
+
+// @Summary     Logout user
+// @Description Logouts current user
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Failure     400 {object} APIError "Bad request"
+// @Failure     401 {object} APIError "Unauthorized"
+// @Failure     500 {object} APIError "Internal server error"
+// @Router      /api/v1/auth/logout [post]
+func (handler *Handler) logout(context *gin.Context) {
+	log.Println("Logout user")
+
+	const prefix = "Bearer "
+	accessToken := context.GetHeader("Authorization")
+	if !strings.HasPrefix(accessToken, prefix) {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid JWT token: should start from Bearer"})
+		return
+	}
+	accessToken = strings.TrimPrefix(accessToken, prefix)
+
+	var claims jwt.RegisteredClaims
+	_, err := jwt.ParseWithClaims(
+		accessToken,
+		&claims,
+		func(token *jwt.Token) (any, error) {
+			return handler.hmacSecret, nil
+		},
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid JWT token: parse failure: %v", err)})
+		return
+	}
+
+	if time.Now().After(claims.ExpiresAt.Time) || time.Now().Before(claims.NotBefore.Time) {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid JWT token: expired"})
+		return
+	}
+
+	userIDSubject := claims.Subject
+	// roles := claims.Audience
+
+	userID, err := strconv.Atoi(userIDSubject)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid JWT token: invalid Subject"})
+		return
+	}
+
+	log.Printf("User is logined: userID=%d", userID)
+
+	// TODO: remove refreshToken
+
+	context.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/api/v1/auth",
+		"",
+		true,
+		true,
+	)
+	context.IndentedJSON(http.StatusOK, "")
 }

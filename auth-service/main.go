@@ -34,8 +34,8 @@ func SetupRouter(handler Handler) *gin.Engine {
 	v1 := router.Group("/api/v1")
 	{
 		routerGroup := v1.Group("/auth")
-		// routerGroup.POST("login", handler.login)
-		// routerGroup.POST("logout", handler.logout)
+		routerGroup.POST("login", handler.login)
+		routerGroup.POST("logout", handler.logout)
 		routerGroup.POST("register", handler.register)
 		// routerGroup.POST("refresh", handler.refresh)
 	}
