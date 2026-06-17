@@ -20,14 +20,6 @@ var (
 	hmacSecret = []byte(os.Getenv("AUTH_SERVICE_HMAC_SECRET"))
 )
 
-type Handler struct {
-	application App
-}
-
-func NewHaldler(app App) Handler {
-	return Handler{application: app}
-}
-
 type RegisterRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
@@ -47,10 +39,6 @@ type APIError struct {
 	Error string `json:"error" example:"just a random internal error"`
 }
 
-func (h *Handler) Close() error {
-	return h.application.Close()
-}
-
 var refreshTokens map[uint32]string = make(map[uint32]string)
 
 // @Summary     Registers new user
@@ -63,7 +51,7 @@ var refreshTokens map[uint32]string = make(map[uint32]string)
 // @Failure     409 {object} APIError "Conflict: login is already taken"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /api/v1/auth/register [post]
-func (h *Handler) register(context *gin.Context) {
+func (handler *Handler) register(context *gin.Context) {
 	log.Println("Register new user")
 
 	var parameters RegisterRequest
@@ -72,7 +60,7 @@ func (h *Handler) register(context *gin.Context) {
 		return
 	}
 
-	_, err := h.application.AuthAPI.ReadAuthByLogin(parameters.Login)
+	_, err := handler.AuthAPI.ReadAuthByLogin(parameters.Login)
 	if err == nil {
 		context.JSON(http.StatusConflict, gin.H{"error": "Login is already taken"})
 		return
@@ -81,7 +69,7 @@ func (h *Handler) register(context *gin.Context) {
 		return
 	}
 
-	userData, err := h.application.UserAPI.CreateUser(parameters.Login, "")
+	userData, err := handler.UserAPI.CreateUser(parameters.Login, "")
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -96,7 +84,7 @@ func (h *Handler) register(context *gin.Context) {
 		return
 	}
 
-	_, err = h.application.AuthAPI.CreateAuth(parameters.Login, string(passwordHash), userData.ID)
+	_, err = handler.AuthAPI.CreateAuth(parameters.Login, string(passwordHash), userData.ID)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

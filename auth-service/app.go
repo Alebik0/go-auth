@@ -7,22 +7,13 @@ import (
 	userservice "github.com/alebik0/go-auth/auth-service/user-service"
 )
 
-type App struct {
+type Handler struct {
 	AuthAPI database.DatabaseAPI
 	UserAPI userservice.DatabaseAPI
 }
 
-func (app *App) Close() error {
-	err := errors.Join(
-		app.AuthAPI.Close(),
-		app.UserAPI.Close(),
-	)
-
-	return err
-}
-
-// Dependency injection logic
-func NewApp() (App, error) {
+// Dependency injection
+func NewHaldler() (Handler, error) {
 	// host := os.Getenv("POSTGRES_HOST")
 	// if host == "" {
 	// 	return App{}, fmt.Errorf("POSTGRES_HOST is mandatory environment variable")
@@ -66,8 +57,17 @@ func NewApp() (App, error) {
 	// userApi := userservice.NewRemoteUserServiceAPI(userServiceHost, userServicePort)
 	userApi := userservice.NewBufferDatabaseAPI()
 
-	return App{
+	return Handler{
 		AuthAPI: authApi,
 		UserAPI: userApi,
 	}, nil
+}
+
+func (handler *Handler) Close() error {
+	err := errors.Join(
+		handler.AuthAPI.Close(),
+		handler.UserAPI.Close(),
+	)
+
+	return err
 }

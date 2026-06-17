@@ -47,11 +47,10 @@ func SetupRouter(handler Handler) *gin.Engine {
 func main() {
 	log.SetPrefix("[AUTH_SERVICE] ")
 
-	app, err := NewApp()
+	handler, err := NewHaldler()
 	if err != nil {
 		log.Fatalf("Failed create app: %v", err)
 	}
-	handler := NewHaldler(app)
 	defer func() {
 		innerErr := handler.Close()
 		if innerErr != nil {
