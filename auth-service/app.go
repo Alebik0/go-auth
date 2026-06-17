@@ -2,14 +2,20 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/alebik0/go-auth/auth-service/database"
+	"github.com/alebik0/go-auth/auth-service/jwt"
 	userservice "github.com/alebik0/go-auth/auth-service/user-service"
 )
 
 type Handler struct {
-	AuthAPI database.DatabaseAPI
-	UserAPI userservice.DatabaseAPI
+	AuthAPI    database.DatabaseAPI
+	JwtAPI     jwt.JwtDatabaseAPI
+	UserAPI    userservice.DatabaseAPI
+	hmacSecret []byte
 }
 
 // Dependency injection
@@ -57,17 +63,50 @@ func NewHaldler() (Handler, error) {
 	// userApi := userservice.NewRemoteUserServiceAPI(userServiceHost, userServicePort)
 	userApi := userservice.NewBufferDatabaseAPI()
 
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		return Handler{}, fmt.Errorf("REDIS_HOST is mandatory environment variable")
+	}
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		return Handler{}, fmt.Errorf("REDIS_PORT is mandatory environment variable")
+	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if redisPassword == "" {
+		return Handler{}, fmt.Errorf("REDIS_PASSWORD is mandatory environment variable")
+	}
+	redisDatabase := os.Getenv("REDIS_DATABASE")
+	if redisDatabase == "" {
+		return Handler{}, fmt.Errorf("REDIS_DATABASE is mandatory environment variable")
+	}
+	redisDatabaseInt, err := strconv.ParseInt(redisDatabase, 10, 32)
+	if err != nil {
+		return Handler{}, fmt.Errorf("REDIS_DATABASE must be an integer")
+	}
+
+	jwtApi := jwt.NewRedisJwtDatabaseAPI(
+		fmt.Sprintf("%s:%s", redisHost, redisPort),
+		redisPassword,
+		int(redisDatabaseInt),
+	)
+
+	hmacSecret := os.Getenv("AUTH_SERVICE_HMAC_SECRET")
+	if hmacSecret == "" {
+		return Handler{}, fmt.Errorf("AUTH_SERVICE_HMAC_SECRET is mandatory environment variable")
+	}
+
 	return Handler{
-		AuthAPI: authApi,
-		UserAPI: userApi,
+		AuthAPI:    authApi,
+		UserAPI:    userApi,
+		JwtAPI:     jwtApi,
+		hmacSecret: []byte(hmacSecret),
 	}, nil
 }
 
 func (handler *Handler) Close() error {
-	err := errors.Join(
+	return errors.Join(
 		handler.AuthAPI.Close(),
 		handler.UserAPI.Close(),
+		handler.JwtAPI.Close(),
 	)
-
-	return err
 }

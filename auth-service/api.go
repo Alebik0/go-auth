@@ -2,10 +2,9 @@ package main
 
 import (
 	"crypto/rand"
-	"fmt"
 	"log"
+	"math/big"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 )
 
 var (
-	hmacSecret = []byte(os.Getenv("AUTH_SERVICE_HMAC_SECRET"))
+	alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
 )
 
 type RegisterRequest struct {
@@ -38,8 +37,6 @@ type Claims struct {
 type APIError struct {
 	Error string `json:"error" example:"just a random internal error"`
 }
-
-var refreshTokens map[uint32]string = make(map[uint32]string)
 
 // @Summary     Registers new user
 // @Description Registers new user with the provided login and password and returns, login must be unique
@@ -90,7 +87,7 @@ func (handler *Handler) register(context *gin.Context) {
 		return
 	}
 
-	accessToken, err := generateAccessToken(userData)
+	accessToken, err := generateAccessToken(handler.hmacSecret, userData)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -102,18 +99,16 @@ func (handler *Handler) register(context *gin.Context) {
 		return
 	}
 
-	// FIXME: rewrite using Redis
-	refreshTokens[userData.ID] = refreshToken
-	// err = h.refreshRepo.Save(
-	// 	r.Context(),
-	// 	user.ID,
-	// 	refreshToken,
-	// 	time.Now().Add(30*24*time.Hour),
-	// )
-	// if err != nil {
-	// 	http.Error(w, "internal error", http.StatusInternalServerError)
-	// 	return
-	// }
+	err = handler.JwtAPI.Save(
+		context.Request.Context(),
+		refreshToken,
+		strconv.FormatInt(int64(userData.ID), 10),
+		time.Now().Add(30*24*time.Hour),
+	)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	registerResponse := RegisterResponse{
 		AccessToken: accessToken,
@@ -132,7 +127,7 @@ func (handler *Handler) register(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, registerResponse)
 }
 
-func generateAccessToken(userData userservice.UserData) (string, error) {
+func generateAccessToken(hmacSecret []byte, userData userservice.UserData) (string, error) {
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.RegisteredClaims{
@@ -152,12 +147,15 @@ func generateAccessToken(userData userservice.UserData) (string, error) {
 }
 
 func generateRefreshToken() (string, error) {
-	secret := make([]byte, 32) // 256-bit key
+	token := make([]byte, 32)
 
-	_, err := rand.Read(secret)
-	if err != nil {
-		return "", fmt.Errorf("failed generate random string: %w", err)
+	for i := range token {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(alphabet))))
+		if err != nil {
+			return "", err
+		}
+		token[i] = alphabet[n.Int64()]
 	}
 
-	return string(secret), nil
+	return string(token), nil
 }
