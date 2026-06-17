@@ -34,10 +34,18 @@ func SetupRouter(handler Handler) *gin.Engine {
 	v1 := router.Group("/api/v1")
 	{
 		routerGroup := v1.Group("/users")
-		routerGroup.POST("", handler.createUser)
-		routerGroup.GET("/:id", handler.readUser)
-		routerGroup.PUT("/:id", handler.updateUser)
-		routerGroup.DELETE("/:id", handler.deleteUser)
+		{
+			// Public methods
+			routerGroup.GET("/:id", handler.readUser)
+
+			// Protected methods: user
+			routerGroup.GET("/my", handler.readMyUser)
+
+			// Protected methods: admin or auth-service
+			routerGroup.POST("", handler.createUser)
+			routerGroup.PUT("/:id", handler.updateUser)
+			routerGroup.DELETE("/:id", handler.deleteUser)
+		}
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

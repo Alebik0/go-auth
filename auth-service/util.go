@@ -14,7 +14,7 @@ func generateAccessToken(hmacSecret []byte, userID string) (string, error) {
 		jwt.RegisteredClaims{
 			Issuer:   "auth-service",
 			Subject:  userID,
-			Audience: []string{"USER"},
+			Audience: []string{"user"},
 			ExpiresAt: jwt.NewNumericDate(
 				time.Now().Add(15 * time.Minute),
 			),

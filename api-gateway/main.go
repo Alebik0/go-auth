@@ -97,6 +97,9 @@ func SetupRouter() *gin.Engine {
 			}
 			users := public.Group("/users")
 			{
+				users.GET("/my", func(c *gin.Context) {
+					userService.ServeHTTP(c.Writer, c.Request)
+				})
 				users.GET("/:id", func(c *gin.Context) {
 					userService.ServeHTTP(c.Writer, c.Request)
 				})
