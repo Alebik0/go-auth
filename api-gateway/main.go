@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alebik0/go-auth/auth-service/docs"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -77,7 +76,6 @@ func SetupRouter() *gin.Engine {
 	userService := NewReverseProxy("http://localhost:8080")
 	authService := NewReverseProxy("http://localhost:8081")
 
-	docs.SwaggerInfo.BasePath = "/api/v1"
 	v1 := router.Group("/api/v1")
 	{
 		public := v1.Group("/")
