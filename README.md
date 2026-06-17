@@ -35,6 +35,7 @@ User API to manage user profiles. Interacts with the database.
 
 - [x] Test Gin framework
 - [x] Test Swagger
+- [x] Test Go unit testing
 
 ### Database
 
