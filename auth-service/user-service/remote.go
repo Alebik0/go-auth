@@ -44,11 +44,11 @@ func (api *RemoteUserServiceAPI) CreateUser(name, description string) (UserData,
 	)
 	defer cancel()
 
-	log.Printf("Send POST /api/v1/user")
+	log.Printf("Send POST /api/v1/users")
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"POST",
-		fmt.Sprintf("%s:%s/api/v1/user", api.ServiceHost, api.ServicePort),
+		fmt.Sprintf("%s:%s/api/v1/users", api.ServiceHost, api.ServicePort),
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
@@ -93,7 +93,7 @@ func (api *RemoteUserServiceAPI) ReadUser(id uint32) (UserData, error) {
 	)
 	defer cancel()
 
-	log.Printf("Send GET /api/v1/user/{id}")
+	log.Printf("Send GET /api/v1/users/{id}")
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"GET",
@@ -151,7 +151,7 @@ func (api *RemoteUserServiceAPI) UpdateUser(id uint32, name, description string)
 	)
 	defer cancel()
 
-	log.Printf("Send PUT /api/v1/user/{id}")
+	log.Printf("Send PUT /api/v1/users/{id}")
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"PUT",
@@ -200,7 +200,7 @@ func (api *RemoteUserServiceAPI) DeleteUser(id uint32) (UserData, error) {
 	)
 	defer cancel()
 
-	log.Printf("Send DELETE /api/v1/user/{id}")
+	log.Printf("Send DELETE /api/v1/users/{id}")
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"DELETE",

@@ -2,8 +2,6 @@ module github.com/alebik0/go-auth/auth-service
 
 go 1.25.5
 
-replace github.com/alebik0/go-auth/user-service => ../user-service
-
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/golang-jwt/jwt/v5 v5.3.1

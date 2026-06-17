@@ -33,7 +33,7 @@ func SetupRouter(handler Handler) *gin.Engine {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	v1 := router.Group("/api/v1")
 	{
-		routerGroup := v1.Group("/user")
+		routerGroup := v1.Group("/users")
 		routerGroup.POST("", handler.createUser)
 		routerGroup.GET("/:id", handler.readUser)
 		routerGroup.PUT("/:id", handler.updateUser)

@@ -45,7 +45,7 @@ go run .
 ### Create User
 
 ```http
-POST /api/v1/user
+POST /api/v1/users
 ```
 
 Example request:
@@ -62,7 +62,7 @@ Example request:
 ### Get User
 
 ```http
-GET /api/v1/user/{id}
+GET /api/v1/users/{id}
 ```
 
 ---
@@ -70,7 +70,7 @@ GET /api/v1/user/{id}
 ### Update User
 
 ```http
-PUT /api/v1/user/{id}
+PUT /api/v1/users/{id}
 ```
 
 Example request:
@@ -87,17 +87,17 @@ Example request:
 ### Delete User
 
 ```http
-DELETE /api/v1/user/{id}
+DELETE /api/v1/users/{id}
 ```
 
 ## Route Summary
 
 | Method | Endpoint            |
 | ------ | ------------------- |
-| POST   | `/api/v1/user`      |
-| GET    | `/api/v1/user/{id}` |
-| PUT    | `/api/v1/user/{id}` |
-| DELETE | `/api/v1/user/{id}` |
+| POST   | `/api/v1/users`      |
+| GET    | `/api/v1/users/{id}` |
+| PUT    | `/api/v1/users/{id}` |
+| DELETE | `/api/v1/users/{id}` |
 
 ## Environment variables
 

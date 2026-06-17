@@ -18,7 +18,7 @@ func TestReadNotFount(t *testing.T) {
 	router := SetupRouter(handler)
 
 	t.Logf("Send request")
-	req, err := http.NewRequest("GET", "/api/v1/user/1", http.NoBody)
+	req, err := http.NewRequest("GET", "/api/v1/users/1", http.NoBody)
 	assert.NoError(t, err)
 
 	responseWriter := httptest.NewRecorder()
@@ -42,10 +42,10 @@ func TestCreateAndRead(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		t.Logf("Send POST /api/v1/user")
+		t.Logf("Send POST /api/v1/users")
 		req, err := http.NewRequest(
 			"POST",
-			"/api/v1/user",
+			"/api/v1/users",
 			bytes.NewBuffer(jsonData),
 		)
 		assert.NoError(t, err)
@@ -77,10 +77,10 @@ func TestCreateAndRead(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		t.Logf("Send POST /api/v1/user/{id}")
+		t.Logf("Send POST /api/v1/users/{id}")
 		req, err := http.NewRequest(
 			"PUT",
-			"/api/v1/user/1",
+			"/api/v1/users/1",
 			bytes.NewBuffer(jsonData),
 		)
 		assert.NoError(t, err)
@@ -105,10 +105,10 @@ func TestCreateAndRead(t *testing.T) {
 	}
 
 	{
-		t.Logf("Send GET /api/v1/user/{id}")
+		t.Logf("Send GET /api/v1/users/{id}")
 		req, err := http.NewRequest(
 			"GET",
-			"/api/v1/user/1",
+			"/api/v1/users/1",
 			http.NoBody,
 		)
 		assert.NoError(t, err)
@@ -133,10 +133,10 @@ func TestCreateAndRead(t *testing.T) {
 	}
 
 	{
-		t.Logf("Send DELETE /api/v1/user/{id}")
+		t.Logf("Send DELETE /api/v1/users/{id}")
 		req, err := http.NewRequest(
 			"DELETE",
-			"/api/v1/user/1",
+			"/api/v1/users/1",
 			http.NoBody,
 		)
 		assert.NoError(t, err)
@@ -161,10 +161,10 @@ func TestCreateAndRead(t *testing.T) {
 	}
 
 	{
-		t.Logf("Send GET /api/v1/user/{id}")
+		t.Logf("Send GET /api/v1/users/{id}")
 		req, err := http.NewRequest(
 			"GET",
-			"/api/v1/user/1",
+			"/api/v1/users/1",
 			http.NoBody,
 		)
 		assert.NoError(t, err)
