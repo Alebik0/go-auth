@@ -6,7 +6,7 @@ Testing web site written on Go to test authentification.
 
 Just a simple microservice architecture, that can be seen on that image:
 
-![Project architecture](./images/architecture.png)
+![Project architecture](./diagrams/Services Diagram.drawio.png)
 
 ### Frontend 
 
