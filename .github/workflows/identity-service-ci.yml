@@ -1,14 +1,14 @@
-name: User Service CI
+name: identity Service CI
 
 on:
   push:
     paths:
-      - "user-service/**"
-      - ".github/workflows/user-service-ci.yml"
+      - "identity-service/**"
+      - ".github/workflows/identity-service-ci.yml"
   pull_request:
     paths:
-      - "user-service/**"
-      - ".github/workflows/user-service-ci.yml"
+      - "identity-service/**"
+      - ".github/workflows/identity-service-ci.yml"
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: user-service
+        working-directory: identity-service
 
     steps:
       - name: Checkout code
@@ -25,8 +25,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: user-service/go.mod
-          cache-dependency-path: user-service/go.sum
+          go-version-file: identity-service/go.mod
+          cache-dependency-path: identity-service/go.sum
 
       - name: Download dependencies
         run: go mod download
@@ -45,7 +45,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: latest
-          working-directory: user-service
+          working-directory: identity-service
 
       - name: Run tests
         run: go test -v ./...
