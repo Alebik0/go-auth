@@ -47,7 +47,8 @@ func (handler *Handler) Register(context *gin.Context) {
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("Login %s is free", parameters.Login)
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	} else {
 		context.JSON(http.StatusConflict, gin.H{"error": "Login is already taken"})
@@ -60,7 +61,8 @@ func (handler *Handler) Register(context *gin.Context) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -69,7 +71,8 @@ func (handler *Handler) Register(context *gin.Context) {
 	log.Printf("Begin transaction")
 	tx, err := handler.database.Begin()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 	defer func() {
@@ -90,7 +93,8 @@ func (handler *Handler) Register(context *gin.Context) {
 		QueryRow(query, parameters.Login, string(passwordHash)).
 		Scan(&userData.ID)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -106,27 +110,31 @@ func (handler *Handler) Register(context *gin.Context) {
 		QueryRow(query, authData.Login, authData.PasswordHash, authData.ProfileID).
 		Scan(&userData.ID)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
 	log.Printf("Generate access token")
 	accessToken, err := generateAccessToken(handler.hmacSecret, strconv.FormatInt(int64(userData.ID), 10))
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
 	log.Printf("Generate refresh token")
 	refreshToken, err := generateRefreshToken()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -138,7 +146,8 @@ func (handler *Handler) Register(context *gin.Context) {
 		time.Now().Add(30*24*time.Hour),
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -207,7 +216,8 @@ func (handler *Handler) Login(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -221,14 +231,16 @@ func (handler *Handler) Login(context *gin.Context) {
 	log.Printf("Generate access token")
 	accessToken, err := generateAccessToken(handler.hmacSecret, strconv.FormatInt(int64(userData.ID), 10))
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
 	log.Printf("Generate refresh token")
 	refreshToken, err := generateRefreshToken()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -240,7 +252,8 @@ func (handler *Handler) Login(context *gin.Context) {
 		time.Now().Add(30*24*time.Hour),
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -269,7 +282,7 @@ func (handler *Handler) Logout(context *gin.Context) {
 	log.Printf("Logout user")
 
 	log.Printf("Load refresh_token cookies")
-	accessToken, err := context.Cookie("refresh_token")
+	refreshToken, err := context.Cookie("refresh_token")
 	if err == http.ErrNoCookie {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "No cookie provided"})
 		return
@@ -279,9 +292,10 @@ func (handler *Handler) Logout(context *gin.Context) {
 	}
 
 	log.Printf("Revert refresh token")
-	err = handler.jwtAPI.Revert(context.Request.Context(), accessToken)
+	err = handler.jwtAPI.Revert(context.Request.Context(), refreshToken)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -307,5 +321,31 @@ func (handler *Handler) Logout(context *gin.Context) {
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /api/v1/auth/refresh [post]
 func (handler *Handler) Refresh(context *gin.Context) {
-	// TODO
+	log.Printf("Refresh access token")
+
+	log.Printf("Load refresh_token cookies")
+	refreshToken, err := context.Cookie("refresh_token")
+	if err == http.ErrNoCookie {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "No cookie provided"})
+		return
+	} else if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "No cookie provided"})
+		return
+	}
+
+	userID, err := handler.jwtAPI.Get(context.Request.Context(), refreshToken)
+	if err != nil {
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
+		return
+	}
+
+	accessToken, err := generateAccessToken(handler.hmacSecret, userID)
+	if err != nil {
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
+		return
+	}
+
+	context.IndentedJSON(http.StatusOK, RefreshResponse{AccessToken: accessToken})
 }

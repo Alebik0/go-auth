@@ -5,10 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"slices"
-	"strconv"
-	"strings"
 
+	"github.com/alebik0/go-auth/identity-service/api/permissions"
 	"github.com/alebik0/go-auth/identity-service/data"
 	"github.com/gin-gonic/gin"
 )
@@ -24,18 +22,17 @@ import (
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /api/v1/users/my [get]
 func (handler *Handler) ReadMyUser(context *gin.Context) {
-	log.Printf("Read user")
-
-	log.Printf("Load authorized user data")
-	userID, err := strconv.ParseInt(context.GetHeader("X-User-ID"), 10, 32)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "authorization failed"})
-		return
-	}
-	userRoles := strings.Split(context.GetHeader("X-User-Role"), " ")
+	log.Printf("Read authentificated user")
 
 	log.Printf("Check permissions")
-	if !slices.Contains(userRoles, "user") {
+	if !permissions.IsUser(context) {
+		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+		return
+	}
+
+	log.Printf("Load authorized user data")
+	userID, err := permissions.GetUserID(context)
+	if err != nil {
 		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 		return
 	}
@@ -52,7 +49,8 @@ func (handler *Handler) ReadMyUser(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -92,7 +90,8 @@ func (handler *Handler) ReadUser(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -123,6 +122,24 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 		return
 	}
 
+	log.Printf("Check permissions")
+	if !permissions.IsAdmin(context) {
+		if !permissions.IsUser(context) {
+			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+			return
+		} else {
+			userID, err := permissions.GetUserID(context)
+			if err != nil {
+				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+				return
+			}
+			if userID != parameters.ID {
+				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+				return
+			}
+		}
+	}
+
 	log.Printf("Load body parameters")
 	var body UpdateUserRequest
 	if err := context.ShouldBindBodyWithJSON(&body); err != nil {
@@ -130,24 +147,10 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 		return
 	}
 
-	log.Printf("Load authorized user data")
-	_, err := strconv.Atoi(context.GetHeader("X-User-ID"))
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "authorization failed"})
-		return
-	}
-	userRoles := strings.Split(context.GetHeader("X-User-Role"), " ")
-
-	log.Printf("Check permissions")
-	if !slices.Contains(userRoles, "admin") && !slices.Contains(userRoles, "auth-service") {
-		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-		return
-	}
-
 	log.Printf("Update user with id=%d", parameters.ID)
 	query := "UPDATE users SET name = $1, description = $2 WHERE id=$3 RETURNING id, name, description;"
 	userData := data.UserData{}
-	err = handler.
+	err := handler.
 		database.
 		QueryRow(query, body.Name, body.Description, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
@@ -155,7 +158,8 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
@@ -185,24 +189,28 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 		return
 	}
 
-	log.Printf("Load authorized user data")
-	_, err := strconv.Atoi(context.GetHeader("X-User-ID"))
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "authorization failed"})
-		return
-	}
-	userRoles := strings.Split(context.GetHeader("X-User-Role"), " ")
-
 	log.Printf("Check permissions")
-	if !slices.Contains(userRoles, "admin") && !slices.Contains(userRoles, "auth-service") {
-		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-		return
+	if !permissions.IsAdmin(context) {
+		if !permissions.IsUser(context) {
+			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+			return
+		} else {
+			userID, err := permissions.GetUserID(context)
+			if err != nil {
+				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+				return
+			}
+			if userID != parameters.ID {
+				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
+				return
+			}
+		}
 	}
 
 	log.Printf("Delete user")
 	query := "DELETE FROM users WHERE id=$1 RETURNING id, name, description;"
 	userData := data.UserData{}
-	err = handler.
+	err := handler.
 		database.
 		QueryRow(query, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
@@ -210,7 +218,8 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("[ERROR] %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
