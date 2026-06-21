@@ -89,7 +89,7 @@ func (handler *Handler) readMyUser(context *gin.Context) {
 	query := "SELECT id, name, description FROM users WHERE id = $1;"
 	userData := UserData{}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, userID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 
@@ -129,7 +129,7 @@ func (handler *Handler) readUser(context *gin.Context) {
 	query := "SELECT id, name, description FROM users WHERE id = $1;"
 	userData := UserData{}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 
@@ -193,7 +193,7 @@ func (handler *Handler) updateUser(context *gin.Context) {
 	query := "UPDATE users SET name = $1, description = $2 WHERE id=$3 RETURNING id, name, description;"
 	userData := UserData{}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, body.Name, body.Description, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -248,7 +248,7 @@ func (handler *Handler) deleteUser(context *gin.Context) {
 	query := "DELETE FROM users WHERE id=$1 RETURNING id, name, description;"
 	userData := UserData{}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -286,7 +286,7 @@ func (handler *Handler) register(context *gin.Context) {
 	query := "SELECT id, login, password_hash, profile_id FROM auth WHERE login = $1;"
 	authData := AuthData{}
 	err := handler.
-		Database.
+		database.
 		QueryRow(query, parameters.Login).
 		Scan(&authData.ID, &authData.Login, &authData.PasswordHash, &authData.ProfileID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -312,7 +312,7 @@ func (handler *Handler) register(context *gin.Context) {
 	log.Printf("Create new profile")
 
 	log.Printf("Begin transaction")
-	tx, err := handler.Database.Begin()
+	tx, err := handler.database.Begin()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -331,7 +331,7 @@ func (handler *Handler) register(context *gin.Context) {
 		Description: "",
 	}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, parameters.Login, string(passwordHash)).
 		Scan(&userData.ID)
 	if err != nil {
@@ -347,7 +347,7 @@ func (handler *Handler) register(context *gin.Context) {
 		ProfileID:    userData.ID,
 	}
 	err = handler.
-		Database.
+		database.
 		QueryRow(query, authData.Login, authData.PasswordHash, authData.ProfileID).
 		Scan(&userData.ID)
 	if err != nil {
@@ -376,7 +376,7 @@ func (handler *Handler) register(context *gin.Context) {
 	}
 
 	log.Printf("Generate refresh token")
-	err = handler.JwtAPI.Save(
+	err = handler.jwtAPI.Save(
 		context.Request.Context(),
 		refreshToken,
 		strconv.FormatInt(int64(userData.ID), 10),
@@ -437,7 +437,7 @@ func (handler *Handler) login(context *gin.Context) {
 	authData := AuthData{}
 	userData := UserData{}
 	err := handler.
-		Database.
+		database.
 		QueryRow(query, parameters.Login).
 		Scan(
 			&authData.ID,
@@ -478,7 +478,7 @@ func (handler *Handler) login(context *gin.Context) {
 	}
 
 	log.Printf("Save refresh token")
-	err = handler.JwtAPI.Save(
+	err = handler.jwtAPI.Save(
 		context.Request.Context(),
 		refreshToken,
 		strconv.FormatInt(int64(userData.ID), 10),
@@ -524,7 +524,7 @@ func (handler *Handler) logout(context *gin.Context) {
 	}
 
 	log.Printf("Revert refresh token")
-	err = handler.JwtAPI.Revert(context.Request.Context(), accessToken)
+	err = handler.jwtAPI.Revert(context.Request.Context(), accessToken)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

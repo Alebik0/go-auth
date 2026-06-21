@@ -15,36 +15,71 @@ import (
 )
 
 type Handler struct {
-	JwtAPI     jwt.JwtDatabaseAPI
-	Database   *sql.DB
+	jwtAPI     jwt.JwtDatabaseAPI
+	database   *sql.DB
 	hmacSecret []byte
 }
 
-// Dependency injection
-func NewHaldler() (Handler, error) {
+func prepareDatabase(db *sql.DB) error {
+	log.Println("Prepare postgres database")
+
+	query := `
+DROP TABLE IF EXISTS auth;
+DROP TABLE IF EXISTS users;
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(64) NOT NULL,
+	description VARCHAR(1024) NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS auth (
+    id SERIAL PRIMARY KEY,
+	login VARCHAR(64) NOT NULL,
+	password_hash VARCHAR(128) NOT NULL,
+    profile_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_auth_profile
+        FOREIGN KEY (profile_id)
+        REFERENCES users(id)
+);`
+	_, err := db.Query(query)
+	if err != nil {
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %v", err)
+		}
+
+		return fmt.Errorf("failed prepare database: %v", err)
+	}
+
+	return nil
+}
+
+func NewDatabaseDependency() (*sql.DB, error) {
 	host := os.Getenv("POSTGRES_HOST")
 	if host == "" {
-		return Handler{}, fmt.Errorf("POSTGRES_HOST is mandatory environment variable")
+		return nil, fmt.Errorf("POSTGRES_HOST is mandatory environment variable")
 	}
 	port := os.Getenv("POSTGRES_PORT")
 	if host == "" {
-		return Handler{}, fmt.Errorf("POSTGRES_PORT is mandatory environment variable")
+		return nil, fmt.Errorf("POSTGRES_PORT is mandatory environment variable")
 	}
 	portInt, err := strconv.ParseUint(port, 10, 16)
 	if err != nil {
-		return Handler{}, fmt.Errorf("POSTGRES_PORT must be a uint16 number")
+		return nil, fmt.Errorf("POSTGRES_PORT must be a uint16 number")
 	}
 	user := os.Getenv("POSTGRES_USER")
 	if user == "" {
-		return Handler{}, fmt.Errorf("POSTGRES_USER is mandatory environment variable")
+		return nil, fmt.Errorf("POSTGRES_USER is mandatory environment variable")
 	}
 	password := os.Getenv("POSTGRES_PASSWORD")
 	if password == "" {
-		return Handler{}, fmt.Errorf("POSTGRES_PASSWORD is mandatory environment variable")
+		return nil, fmt.Errorf("POSTGRES_PASSWORD is mandatory environment variable")
 	}
 	dbName := os.Getenv("POSTGRES_DB")
 	if dbName == "" {
-		return Handler{}, fmt.Errorf("POSTGRES_DB is mandatory environment variable")
+		return nil, fmt.Errorf("POSTGRES_DB is mandatory environment variable")
 	}
 
 	log.Println("Create postgres API")
@@ -61,7 +96,7 @@ func NewHaldler() (Handler, error) {
 
 	c, err := pq.NewConnectorConfig(cfg)
 	if err != nil {
-		return Handler{}, fmt.Errorf("failed create connection config: %v", err)
+		return nil, fmt.Errorf("failed create connection config: %v", err)
 	}
 
 	db := sql.OpenDB(c)
@@ -78,55 +113,36 @@ func NewHaldler() (Handler, error) {
 			log.Printf("[WARN] Failed to close database: %v", err)
 		}
 
-		return Handler{}, fmt.Errorf("failed ping server: %v", err)
+		return nil, fmt.Errorf("failed ping server: %v", err)
 	}
 
-	log.Println("Prepare postgres database")
-
-	query := `
-DROP TABLE IF EXISTS auth;
-CREATE TABLE IF NOT EXISTS auth (
-    id SERIAL PRIMARY KEY,
-	login VARCHAR(64) NOT NULL,
-	password_hash VARCHAR(128) NOT NULL,
-    profile_id INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_auth_profile
-        FOREIGN KEY (profile_id)
-        REFERENCES users(id)
-);`
-	_, err = db.Query(query)
-	if err != nil {
-		err := db.Close()
-		if err != nil {
-			log.Printf("[WARN] Failed to close database: %v", err)
-		}
-
-		return Handler{}, fmt.Errorf("failed prepare database: %v", err)
-	}
+	prepareDatabase(db)
 
 	log.Println("Created postgres API")
 
+	return db, nil
+}
+
+func NewJWTDependency() (jwt.JwtDatabaseAPI, error) {
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
-		return Handler{}, fmt.Errorf("REDIS_HOST is mandatory environment variable")
+		return nil, fmt.Errorf("REDIS_HOST is mandatory environment variable")
 	}
 	redisPort := os.Getenv("REDIS_PORT")
 	if redisPort == "" {
-		return Handler{}, fmt.Errorf("REDIS_PORT is mandatory environment variable")
+		return nil, fmt.Errorf("REDIS_PORT is mandatory environment variable")
 	}
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	if redisPassword == "" {
-		return Handler{}, fmt.Errorf("REDIS_PASSWORD is mandatory environment variable")
+		return nil, fmt.Errorf("REDIS_PASSWORD is mandatory environment variable")
 	}
 	redisDatabase := os.Getenv("REDIS_DATABASE")
 	if redisDatabase == "" {
-		return Handler{}, fmt.Errorf("REDIS_DATABASE is mandatory environment variable")
+		return nil, fmt.Errorf("REDIS_DATABASE is mandatory environment variable")
 	}
 	redisDatabaseInt, err := strconv.ParseInt(redisDatabase, 10, 32)
 	if err != nil {
-		return Handler{}, fmt.Errorf("REDIS_DATABASE must be an integer")
+		return nil, fmt.Errorf("REDIS_DATABASE must be an integer")
 	}
 
 	jwtApi := jwt.NewRedisJwtDatabaseAPI(
@@ -136,21 +152,21 @@ CREATE TABLE IF NOT EXISTS auth (
 	)
 	// jwtApi := jwt.NewBufferJwtDatabaseAPI()
 
-	hmacSecret := os.Getenv("IDENTITY_SERVICE_HMAC_SECRET")
-	if hmacSecret == "" {
-		return Handler{}, fmt.Errorf("IDENTITY_SERVICE_HMAC_SECRET is mandatory environment variable")
-	}
+	return jwtApi, nil
+}
 
+// Dependency injection
+func NewHandler(database *sql.DB, jwtApi jwt.JwtDatabaseAPI, hmacSecret []byte) (Handler, error) {
 	return Handler{
-		Database:   db,
-		JwtAPI:     jwtApi,
-		hmacSecret: []byte(hmacSecret),
+		database:   database,
+		jwtAPI:     jwtApi,
+		hmacSecret: hmacSecret,
 	}, nil
 }
 
 func (handler *Handler) Close() error {
 	return errors.Join(
-		handler.Database.Close(),
-		handler.JwtAPI.Close(),
+		handler.database.Close(),
+		handler.jwtAPI.Close(),
 	)
 }

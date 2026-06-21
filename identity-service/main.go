@@ -56,7 +56,26 @@ func SetupRouter(handler Handler) *gin.Engine {
 func main() {
 	log.SetPrefix("[IDENTITY_SERVICE] ")
 
-	handler, err := NewHaldler()
+	database, err := NewDatabaseDependency()
+	if err != nil {
+		log.Fatalf("Failed create database dependency: %v", err)
+	}
+
+	jwtApi, err := NewJWTDependency()
+	if err != nil {
+		log.Fatalf("Failed create jwt dependency: %v", err)
+	}
+
+	hmacSecret := os.Getenv("IDENTITY_SERVICE_HMAC_SECRET")
+	if hmacSecret == "" {
+		log.Fatalf("IDENTITY_SERVICE_HMAC_SECRET is mandatory environment variable")
+	}
+
+	handler, err := NewHandler(
+		database,
+		jwtApi,
+		[]byte(hmacSecret),
+	)
 	if err != nil {
 		log.Fatalf("Failed create app: %v", err)
 	}
