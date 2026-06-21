@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,12 +12,6 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq" // To register the driver.
 )
-
-type Handler struct {
-	jwtAPI     jwt.JwtDatabaseAPI
-	database   *sql.DB
-	hmacSecret []byte
-}
 
 func prepareDatabase(db *sql.DB) error {
 	log.Println("Prepare postgres database")
@@ -153,20 +146,4 @@ func NewJWTDependency() (jwt.JwtDatabaseAPI, error) {
 	// jwtApi := jwt.NewBufferJwtDatabaseAPI()
 
 	return jwtApi, nil
-}
-
-// Dependency injection
-func NewHandler(database *sql.DB, jwtApi jwt.JwtDatabaseAPI, hmacSecret []byte) (Handler, error) {
-	return Handler{
-		database:   database,
-		jwtAPI:     jwtApi,
-		hmacSecret: hmacSecret,
-	}, nil
-}
-
-func (handler *Handler) Close() error {
-	return errors.Join(
-		handler.database.Close(),
-		handler.jwtAPI.Close(),
-	)
 }

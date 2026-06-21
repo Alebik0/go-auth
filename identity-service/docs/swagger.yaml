@@ -1,26 +1,26 @@
 basePath: /api/v1
 definitions:
-  main.APIError:
+  api.APIError:
     properties:
       error:
         example: just a random internal error
         type: string
     type: object
-  main.LoginRequest:
+  api.LoginRequest:
     properties:
       login:
         type: string
       password:
         type: string
     type: object
-  main.RegisterRequest:
+  api.RegisterRequest:
     properties:
       login:
         type: string
       password:
         type: string
     type: object
-  main.UpdateUserData:
+  api.UpdateUserRequest:
     properties:
       description:
         type: string
@@ -51,22 +51,22 @@ paths:
         name: parameters
         required: true
         schema:
-          $ref: '#/definitions/main.LoginRequest'
+          $ref: '#/definitions/api.LoginRequest'
       produces:
       - application/json
       responses:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Login user
       tags:
       - Auth
@@ -81,11 +81,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Logout user
       tags:
       - Auth
@@ -100,11 +100,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Refresh access token
       tags:
       - Auth
@@ -120,22 +120,22 @@ paths:
         name: parameters
         required: true
         schema:
-          $ref: '#/definitions/main.RegisterRequest'
+          $ref: '#/definitions/api.RegisterRequest'
       produces:
       - application/json
       responses:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "409":
           description: 'Conflict: login is already taken'
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Registers new user
       tags:
       - Auth
@@ -167,19 +167,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Delete user CRUD operation
       tags:
       - User
@@ -199,15 +199,15 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Read user CRUD operation
       tags:
       - User
@@ -222,12 +222,12 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Update parameters
+      - description: Update user request body parameters
         in: body
         name: parameters
         required: true
         schema:
-          $ref: '#/definitions/main.UpdateUserData'
+          $ref: '#/definitions/api.UpdateUserRequest'
       - description: Authorized user ID
         in: header
         name: X-User-ID
@@ -244,19 +244,19 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Update user CRUD operation
       tags:
       - User
@@ -283,11 +283,11 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.APIError'
+            $ref: '#/definitions/api.APIError'
       summary: Read current authentificated user
       tags:
       - User

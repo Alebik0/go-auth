@@ -41,7 +41,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.LoginRequest"
+                            "$ref": "#/definitions/api.LoginRequest"
                         }
                     }
                 ],
@@ -49,19 +49,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -84,13 +84,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -113,13 +113,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -145,7 +145,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.RegisterRequest"
+                            "$ref": "#/definitions/api.RegisterRequest"
                         }
                     }
                 ],
@@ -153,19 +153,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "409": {
                         "description": "Conflict: login is already taken",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -204,13 +204,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -242,19 +242,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -280,12 +280,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update parameters",
+                        "description": "Update user request body parameters",
                         "name": "parameters",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.UpdateUserData"
+                            "$ref": "#/definitions/api.UpdateUserRequest"
                         }
                     },
                     {
@@ -307,25 +307,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -369,25 +369,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -395,7 +395,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.APIError": {
+        "api.APIError": {
             "type": "object",
             "properties": {
                 "error": {
@@ -404,7 +404,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.LoginRequest": {
+        "api.LoginRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -415,7 +415,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.RegisterRequest": {
+        "api.RegisterRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -426,7 +426,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.UpdateUserData": {
+        "api.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "description": {

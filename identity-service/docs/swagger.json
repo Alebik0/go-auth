@@ -35,7 +35,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.LoginRequest"
+                            "$ref": "#/definitions/api.LoginRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -78,13 +78,13 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -107,13 +107,13 @@
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -139,7 +139,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.RegisterRequest"
+                            "$ref": "#/definitions/api.RegisterRequest"
                         }
                     }
                 ],
@@ -147,19 +147,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "409": {
                         "description": "Conflict: login is already taken",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -198,13 +198,13 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -236,19 +236,19 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -274,12 +274,12 @@
                         "required": true
                     },
                     {
-                        "description": "Update parameters",
+                        "description": "Update user request body parameters",
                         "name": "parameters",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.UpdateUserData"
+                            "$ref": "#/definitions/api.UpdateUserRequest"
                         }
                     },
                     {
@@ -301,25 +301,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -363,25 +363,25 @@
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.APIError"
+                            "$ref": "#/definitions/api.APIError"
                         }
                     }
                 }
@@ -389,7 +389,7 @@
         }
     },
     "definitions": {
-        "main.APIError": {
+        "api.APIError": {
             "type": "object",
             "properties": {
                 "error": {
@@ -398,7 +398,7 @@
                 }
             }
         },
-        "main.LoginRequest": {
+        "api.LoginRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -409,7 +409,7 @@
                 }
             }
         },
-        "main.RegisterRequest": {
+        "api.RegisterRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -420,7 +420,7 @@
                 }
             }
         },
-        "main.UpdateUserData": {
+        "api.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "description": {

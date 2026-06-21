@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/alebik0/go-auth/identity-service/api"
 	"github.com/alebik0/go-auth/identity-service/docs"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -27,7 +28,7 @@ import (
 // @host     localhost:8081
 // @BasePath /api/v1
 
-func SetupRouter(handler Handler) *gin.Engine {
+func SetupRouter(handler api.Handler) *gin.Engine {
 	router := gin.Default()
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
@@ -35,17 +36,17 @@ func SetupRouter(handler Handler) *gin.Engine {
 	{
 		auth := v1.Group("/auth")
 		{
-			auth.POST("login", handler.login)
-			auth.POST("logout", handler.logout)
-			auth.POST("register", handler.register)
-			auth.POST("refresh", handler.refresh)
+			auth.POST("login", handler.Login)
+			auth.POST("logout", handler.Logout)
+			auth.POST("register", handler.Register)
+			auth.POST("refresh", handler.Refresh)
 		}
 		users := v1.Group("/users")
 		{
-			users.GET("mu", handler.readMyUser)
-			users.GET("/:id", handler.readUser)
-			users.PUT("/:id", handler.updateUser)
-			users.DELETE("/:id", handler.deleteUser)
+			users.GET("mu", handler.ReadMyUser)
+			users.GET("/:id", handler.ReadUser)
+			users.PUT("/:id", handler.UpdateUser)
+			users.DELETE("/:id", handler.DeleteUser)
 		}
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -71,7 +72,7 @@ func main() {
 		log.Fatalf("IDENTITY_SERVICE_HMAC_SECRET is mandatory environment variable")
 	}
 
-	handler, err := NewHandler(
+	handler, err := api.NewHandler(
 		database,
 		jwtApi,
 		[]byte(hmacSecret),
