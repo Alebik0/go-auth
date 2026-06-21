@@ -1,0 +1,294 @@
+basePath: /api/v1
+definitions:
+  main.APIError:
+    properties:
+      error:
+        example: just a random internal error
+        type: string
+    type: object
+  main.LoginRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  main.RegisterRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  main.UpdateUserData:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    name: Alebik0
+  description: Identity service API, that provides authentification functionality,
+    session control via JWT tokens and user management.
+  license:
+    name: MIT
+    url: https://mit-license.org
+  title: Identity service
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logins user with the provided login and password and returns, checks
+        if provided password is correct via checking password hash match
+      parameters:
+      - description: Login parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Login user
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logouts current user
+      produces:
+      - application/json
+      responses:
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Logout user
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access token for user
+      produces:
+      - application/json
+      responses:
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Refresh access token
+      tags:
+      - Auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers new user with the provided login and password, login
+        must be unique
+      parameters:
+      - description: Register parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "409":
+          description: 'Conflict: login is already taken'
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Registers new user
+      tags:
+      - Auth
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user from the Postgres database and returns deleted user
+        as a JSON object
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Authorized user ID
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Authorized user roles
+        in: header
+        name: X-User-Role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Delete user CRUD operation
+      tags:
+      - User
+    get:
+      consumes:
+      - application/json
+      description: Reads user from Postgres database and returns as a JSON object
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Read user CRUD operation
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Updates user in the Postgres database and returns updated user
+        as a JSON object
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateUserData'
+      - description: Authorized user ID
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Authorized user roles
+        in: header
+        name: X-User-Role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Update user CRUD operation
+      tags:
+      - User
+  /api/v1/users/my:
+    get:
+      consumes:
+      - application/json
+      description: Reads user ID from authentification data and reads its data from
+        database.
+      parameters:
+      - description: Authorized user ID
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Authorized user roles
+        in: header
+        name: X-User-Role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/main.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: Read current authentificated user
+      tags:
+      - User
+swagger: "2.0"

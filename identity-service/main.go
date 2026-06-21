@@ -9,22 +9,22 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alebik0/go-auth/user-service/docs"
+	"github.com/alebik0/go-auth/identity-service/docs"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           User service
+// @title           Identity service
 // @version         1.0
-// @description     User service API, that provides CRUD operations to manage users
+// @description     Identity service API, that provides authentification functionality, session control via JWT tokens and user management.
 
 // @contact.name Alebik0
 
 // @license.name MIT
 // @license.url  https://mit-license.org
 
-// @host     localhost:8080
+// @host     localhost:8081
 // @BasePath /api/v1
 
 func SetupRouter(handler Handler) *gin.Engine {
@@ -33,18 +33,19 @@ func SetupRouter(handler Handler) *gin.Engine {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	v1 := router.Group("/api/v1")
 	{
-		routerGroup := v1.Group("/users")
+		auth := v1.Group("/auth")
 		{
-			// Public methods
-			routerGroup.GET("/:id", handler.readUser)
-
-			// Protected methods: user
-			routerGroup.GET("/my", handler.readMyUser)
-
-			// Protected methods: admin or auth-service
-			routerGroup.POST("", handler.createUser)
-			routerGroup.PUT("/:id", handler.updateUser)
-			routerGroup.DELETE("/:id", handler.deleteUser)
+			auth.POST("login", handler.login)
+			auth.POST("logout", handler.logout)
+			auth.POST("register", handler.register)
+			auth.POST("refresh", handler.refresh)
+		}
+		users := v1.Group("/users")
+		{
+			users.GET("mu", handler.readMyUser)
+			users.GET("/:id", handler.readUser)
+			users.PUT("/:id", handler.updateUser)
+			users.DELETE("/:id", handler.deleteUser)
 		}
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -53,13 +54,12 @@ func SetupRouter(handler Handler) *gin.Engine {
 }
 
 func main() {
-	log.SetPrefix("[USER_SERVICE] ")
+	log.SetPrefix("[IDENTITY_SERVICE] ")
 
-	app, err := NewApp()
+	handler, err := NewHaldler()
 	if err != nil {
 		log.Fatalf("Failed create app: %v", err)
 	}
-	handler := NewHaldler(app)
 	defer func() {
 		innerErr := handler.Close()
 		if innerErr != nil {
@@ -69,9 +69,9 @@ func main() {
 
 	router := SetupRouter(handler)
 
-	port := os.Getenv("USER_SERVICE_PORT")
+	port := os.Getenv("IDENTITY_SERVICE_PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 
 	log.Printf("Running server on port %s", port)

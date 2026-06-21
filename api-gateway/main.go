@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var hmacSecret = os.Getenv("AUTH_SERVICE_HMAC_SECRET")
+var hmacSecret = os.Getenv("IDENTITY_SERVICE_HMAC_SECRET")
 
 func NewReverseProxy(target string) *httputil.ReverseProxy {
 	remote, err := url.Parse(target)

@@ -1,21 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/alebik0/go-auth/auth-service/database"
-	"github.com/alebik0/go-auth/auth-service/jwt"
-	userservice "github.com/alebik0/go-auth/auth-service/user-service"
+	"github.com/alebik0/go-auth/identity-service/jwt"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq" // To register the driver.
 )
 
 type Handler struct {
-	AuthAPI    database.DatabaseAPI
 	JwtAPI     jwt.JwtDatabaseAPI
-	UserAPI    userservice.DatabaseAPI
+	Database   *sql.DB
 	hmacSecret []byte
 }
 
@@ -46,23 +47,66 @@ func NewHaldler() (Handler, error) {
 		return Handler{}, fmt.Errorf("POSTGRES_DB is mandatory environment variable")
 	}
 
-	authApi, err := database.NewPostgresAPI(host, uint16(portInt), user, password, dbName, 5*time.Second)
+	log.Println("Create postgres API")
+
+	cfg := pq.Config{
+		Host:           host,
+		Port:           uint16(portInt),
+		User:           user,
+		Password:       password,
+		Database:       dbName,
+		ConnectTimeout: 5 * time.Second,
+		SSLMode:        pq.SSLModeDisable,
+	}
+
+	c, err := pq.NewConnectorConfig(cfg)
 	if err != nil {
-		return Handler{}, fmt.Errorf("failed to load database API: %v", err)
-	}
-	// authApi := database.NewBufferDatabaseAPI()
-
-	userServiceHost := os.Getenv("USER_SERVICE_HOST")
-	if host == "" {
-		return Handler{}, fmt.Errorf("USER_SERVICE_HOST is mandatory environment variable")
-	}
-	userServicePort := os.Getenv("USER_SERVICE_PORT")
-	if host == "" {
-		return Handler{}, fmt.Errorf("USER_SERVICE_PORT is mandatory environment variable")
+		return Handler{}, fmt.Errorf("failed create connection config: %v", err)
 	}
 
-	userApi := userservice.NewRemoteUserServiceAPI(userServiceHost, userServicePort)
-	// userApi := userservice.NewBufferDatabaseAPI()
+	db := sql.OpenDB(c)
+
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	log.Println("Ping postgres database")
+	err = db.Ping()
+	if err != nil {
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %v", err)
+		}
+
+		return Handler{}, fmt.Errorf("failed ping server: %v", err)
+	}
+
+	log.Println("Prepare postgres database")
+
+	query := `
+DROP TABLE IF EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth (
+    id SERIAL PRIMARY KEY,
+	login VARCHAR(64) NOT NULL,
+	password_hash VARCHAR(128) NOT NULL,
+    profile_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_auth_profile
+        FOREIGN KEY (profile_id)
+        REFERENCES users(id)
+);`
+	_, err = db.Query(query)
+	if err != nil {
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %v", err)
+		}
+
+		return Handler{}, fmt.Errorf("failed prepare database: %v", err)
+	}
+
+	log.Println("Created postgres API")
 
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
@@ -92,14 +136,13 @@ func NewHaldler() (Handler, error) {
 	)
 	// jwtApi := jwt.NewBufferJwtDatabaseAPI()
 
-	hmacSecret := os.Getenv("AUTH_SERVICE_HMAC_SECRET")
+	hmacSecret := os.Getenv("IDENTITY_SERVICE_HMAC_SECRET")
 	if hmacSecret == "" {
-		return Handler{}, fmt.Errorf("AUTH_SERVICE_HMAC_SECRET is mandatory environment variable")
+		return Handler{}, fmt.Errorf("IDENTITY_SERVICE_HMAC_SECRET is mandatory environment variable")
 	}
 
 	return Handler{
-		AuthAPI:    authApi,
-		UserAPI:    userApi,
+		Database:   db,
 		JwtAPI:     jwtApi,
 		hmacSecret: []byte(hmacSecret),
 	}, nil
@@ -107,8 +150,7 @@ func NewHaldler() (Handler, error) {
 
 func (handler *Handler) Close() error {
 	return errors.Join(
-		handler.AuthAPI.Close(),
-		handler.UserAPI.Close(),
+		handler.Database.Close(),
 		handler.JwtAPI.Close(),
 	)
 }
