@@ -1,6 +1,3 @@
 go 1.25.5
 
-use (
-	./api-gateway
-	./identity-service
-)
+use ./identity-service
