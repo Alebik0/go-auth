@@ -109,7 +109,15 @@ func NewDatabaseDependency() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed ping server: %v", err)
 	}
 
-	prepareDatabase(db)
+	err = prepareDatabase(db)
+	if err != nil {
+		err := db.Close()
+		if err != nil {
+			log.Printf("[WARN] Failed to close database: %v", err)
+		}
+
+		return nil, fmt.Errorf("failed prepare database: %v", err)
+	}
 
 	log.Println("Created postgres API")
 
