@@ -138,13 +138,16 @@ func (handler *Handler) Register(context *gin.Context) {
 		return
 	}
 
-	log.Printf("Generate refresh token")
-	err = handler.jwtAPI.Save(
-		context.Request.Context(),
-		refreshToken,
-		strconv.FormatInt(int64(userData.ID), 10),
-		time.Now().Add(30*24*time.Hour),
-	)
+	log.Printf("Save token: key=%s, value=%d", refreshToken, userData.ID)
+	err = handler.
+		cache.
+		Set(
+			context.Request.Context(),
+			"token:"+refreshToken,
+			strconv.FormatUint(uint64(userData.ID), 10),
+			30*24*time.Hour,
+		).
+		Err()
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -244,13 +247,16 @@ func (handler *Handler) Login(context *gin.Context) {
 		return
 	}
 
-	log.Printf("Save refresh token")
-	err = handler.jwtAPI.Save(
-		context.Request.Context(),
-		refreshToken,
-		strconv.FormatInt(int64(userData.ID), 10),
-		time.Now().Add(30*24*time.Hour),
-	)
+	log.Printf("Save token: key=%s, value=%d", refreshToken, userData.ID)
+	err = handler.
+		cache.
+		Set(
+			context.Request.Context(),
+			"token:"+refreshToken,
+			strconv.FormatUint(uint64(userData.ID), 10),
+			30*24*time.Hour,
+		).
+		Err()
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -292,7 +298,15 @@ func (handler *Handler) Logout(context *gin.Context) {
 	}
 
 	log.Printf("Revert refresh token")
-	err = handler.jwtAPI.Revert(context.Request.Context(), refreshToken)
+
+	log.Printf("Revert token: key=%s", refreshToken)
+	err = handler.
+		cache.
+		Del(
+			context.Request.Context(),
+			"token:"+refreshToken,
+		).
+		Err()
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -333,14 +347,21 @@ func (handler *Handler) Refresh(context *gin.Context) {
 		return
 	}
 
-	userID, err := handler.jwtAPI.Get(context.Request.Context(), refreshToken)
+	log.Printf("Get token: key=%s", refreshToken)
+	result, err := handler.
+		cache.
+		Get(
+			context.Request.Context(),
+			"token:"+refreshToken,
+		).
+		Result()
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
 		return
 	}
 
-	accessToken, err := generateAccessToken(handler.hmacSecret, userID)
+	accessToken, err := generateAccessToken(handler.hmacSecret, result)
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})

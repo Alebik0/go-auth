@@ -10,10 +10,10 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alebik0/go-auth/identity-service/api"
 	"github.com/alebik0/go-auth/identity-service/data"
-	"github.com/alebik0/go-auth/identity-service/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-jose/go-jose/v4/testutils/assert"
 
@@ -21,6 +21,7 @@ import (
 	_ "github.com/lib/pq" // To register the driver.
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-redis/redismock/v9"
 )
 
 func TestAuth(t *testing.T) {
@@ -36,12 +37,12 @@ func TestAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Create in-memory JWT API")
-	jwtApi := jwt.NewBufferJwtDatabaseAPI()
+	cache, rmock := redismock.NewClientMock()
 
 	t.Logf("Create handler")
 	handler, err := api.NewHandler(
 		database,
-		jwtApi,
+		cache,
 		[]byte(hmacSecret),
 	)
 	assert.NoError(t, err)
@@ -80,6 +81,12 @@ func TestAuth(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		mock.ExpectCommit()
 
+		t.Logf("Prepare redis mock")
+		rmock.
+			Regexp().
+			ExpectSet(`^token:.+$`, "1", 30*24*time.Hour).
+			SetVal("OK")
+
 		t.Logf("POST /api/v1/auth/register")
 		body := strings.NewReader(fmt.Sprintf(`{"login":"%s", "password":"%s"}`, login, password))
 		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", body)
@@ -105,6 +112,14 @@ func TestAuth(t *testing.T) {
 
 		if cookies[0].Name != "refresh_token" {
 			t.Fatal("wrong cookie")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Error(err)
+		}
+
+		if err := rmock.ExpectationsWereMet(); err != nil {
+			t.Error(err)
 		}
 
 		globalCookies = append(globalCookies, cookies...)
@@ -152,6 +167,14 @@ func TestAuth(t *testing.T) {
 
 		if !reflect.DeepEqual(response, expected) {
 			t.Fatalf("got %+v want %+v", response, expected)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Error(err)
+		}
+
+		if err := rmock.ExpectationsWereMet(); err != nil {
+			t.Error(err)
 		}
 	}
 }

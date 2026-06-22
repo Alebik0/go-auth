@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alebik0/go-auth/identity-service/jwt"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq" // To register the driver.
+	"github.com/redis/go-redis/v9"
 )
 
 func prepareDatabase(db *sql.DB) error {
@@ -116,7 +116,7 @@ func NewDatabaseDependency() (*sql.DB, error) {
 	return db, nil
 }
 
-func NewJWTDependency() (jwt.JwtDatabaseAPI, error) {
+func NewCacheDependency() (*redis.Client, error) {
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		return nil, fmt.Errorf("REDIS_HOST is mandatory environment variable")
@@ -138,12 +138,11 @@ func NewJWTDependency() (jwt.JwtDatabaseAPI, error) {
 		return nil, fmt.Errorf("REDIS_DATABASE must be an integer")
 	}
 
-	jwtApi := jwt.NewRedisJwtDatabaseAPI(
-		fmt.Sprintf("%s:%s", redisHost, redisPort),
-		redisPassword,
-		int(redisDatabaseInt),
-	)
-	// jwtApi := jwt.NewBufferJwtDatabaseAPI()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", redisHost, redisPort),
+		Password: redisPassword,
+		DB:       int(redisDatabaseInt),
+	})
 
-	return jwtApi, nil
+	return rdb, nil
 }

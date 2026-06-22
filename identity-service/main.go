@@ -62,7 +62,7 @@ func main() {
 		log.Fatalf("Failed create database dependency: %v", err)
 	}
 
-	jwtApi, err := NewJWTDependency()
+	cache, err := NewCacheDependency()
 	if err != nil {
 		log.Fatalf("Failed create jwt dependency: %v", err)
 	}
@@ -74,7 +74,7 @@ func main() {
 
 	handler, err := api.NewHandler(
 		database,
-		jwtApi,
+		cache,
 		[]byte(hmacSecret),
 	)
 	if err != nil {

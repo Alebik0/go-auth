@@ -4,20 +4,20 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/alebik0/go-auth/identity-service/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
 type Handler struct {
-	jwtAPI     jwt.JwtDatabaseAPI
 	database   *sql.DB
+	cache      *redis.Client
 	hmacSecret []byte
 }
 
 // Dependency injection
-func NewHandler(database *sql.DB, jwtApi jwt.JwtDatabaseAPI, hmacSecret []byte) (Handler, error) {
+func NewHandler(database *sql.DB, cache *redis.Client, hmacSecret []byte) (Handler, error) {
 	return Handler{
 		database:   database,
-		jwtAPI:     jwtApi,
+		cache:      cache,
 		hmacSecret: hmacSecret,
 	}, nil
 }
@@ -25,6 +25,6 @@ func NewHandler(database *sql.DB, jwtApi jwt.JwtDatabaseAPI, hmacSecret []byte) 
 func (handler *Handler) Close() error {
 	return errors.Join(
 		handler.database.Close(),
-		handler.jwtAPI.Close(),
+		handler.cache.Close(),
 	)
 }
