@@ -3,7 +3,10 @@ module github.com/alebik0/go-auth/identity-service
 go 1.25.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gin-gonic/gin v1.12.0
+	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-openapi/testify/v2 v2.5.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/lib/pq v1.12.3
 	github.com/redis/go-redis/v9 v9.20.1

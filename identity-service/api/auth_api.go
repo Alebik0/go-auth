@@ -90,7 +90,7 @@ func (handler *Handler) Register(context *gin.Context) {
 	}
 	err = handler.
 		database.
-		QueryRow(query, parameters.Login, string(passwordHash)).
+		QueryRow(query, userData.Name, userData.Description).
 		Scan(&userData.ID)
 	if err != nil {
 		log.Printf("[ERROR] %v", err)

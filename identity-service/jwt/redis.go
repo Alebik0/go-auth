@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// JWT API, that uses Redis to store data.
 type RedisJwtDatabaseAPI struct {
 	client *redis.Client
 }

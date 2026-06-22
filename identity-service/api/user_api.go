@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/alebik0/go-auth/identity-service/api/permissions"
 	"github.com/alebik0/go-auth/identity-service/data"
 	"github.com/gin-gonic/gin"
 )
@@ -25,13 +24,13 @@ func (handler *Handler) ReadMyUser(context *gin.Context) {
 	log.Printf("Read authentificated user")
 
 	log.Printf("Check permissions")
-	if !permissions.IsUser(context) {
+	if !handler.isUser(context) {
 		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 		return
 	}
 
 	log.Printf("Load authorized user data")
-	userID, err := permissions.GetUserID(context)
+	userID, err := handler.getUserID(context)
 	if err != nil {
 		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 		return
@@ -123,12 +122,12 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 	}
 
 	log.Printf("Check permissions")
-	if !permissions.IsAdmin(context) {
-		if !permissions.IsUser(context) {
+	if !handler.isAdmin(context) {
+		if !handler.isUser(context) {
 			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 			return
 		} else {
-			userID, err := permissions.GetUserID(context)
+			userID, err := handler.getUserID(context)
 			if err != nil {
 				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 				return
@@ -190,12 +189,12 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 	}
 
 	log.Printf("Check permissions")
-	if !permissions.IsAdmin(context) {
-		if !permissions.IsUser(context) {
+	if !handler.isAdmin(context) {
+		if !handler.isUser(context) {
 			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 			return
 		} else {
-			userID, err := permissions.GetUserID(context)
+			userID, err := handler.getUserID(context)
 			if err != nil {
 				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
 				return

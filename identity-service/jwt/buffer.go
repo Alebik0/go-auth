@@ -11,6 +11,10 @@ type BufferJwtRow struct {
 	Time  time.Time
 }
 
+// In-buffer JWT API
+//
+// Saves all required data to the in-memory buffer and operates with this data.
+// Useful for testing purposes
 type BufferJwtDatabaseAPI struct {
 	data map[string]BufferJwtRow
 }

@@ -43,7 +43,7 @@ func SetupRouter(handler api.Handler) *gin.Engine {
 		}
 		users := v1.Group("/users")
 		{
-			users.GET("mu", handler.ReadMyUser)
+			users.GET("my", handler.ReadMyUser)
 			users.GET("/:id", handler.ReadUser)
 			users.PUT("/:id", handler.UpdateUser)
 			users.DELETE("/:id", handler.DeleteUser)
