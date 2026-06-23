@@ -11,6 +11,7 @@ import (
 
 	"github.com/alebik0/go-auth/identity-service/api"
 	"github.com/alebik0/go-auth/identity-service/docs"
+	"github.com/alebik0/go-auth/identity-service/middleware"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -43,10 +44,16 @@ func SetupRouter(handler api.Handler) *gin.Engine {
 		}
 		users := v1.Group("/users")
 		{
-			users.GET("my", handler.ReadMyUser)
 			users.GET("/:id", handler.ReadUser)
-			users.PUT("/:id", handler.UpdateUser)
-			users.DELETE("/:id", handler.DeleteUser)
+
+			protected := users.Group("")
+			protected.Use(middleware.RequireAuth(handler.HmacSecret))
+			protected.Use(middleware.RequireAnyRole(middleware.UserRole))
+			{
+				protected.GET("my", handler.ReadMyUser)
+				protected.PUT("/:id", handler.UpdateUser)
+				protected.DELETE("/:id", handler.DeleteUser)
+			}
 		}
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

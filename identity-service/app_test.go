@@ -37,12 +37,12 @@ func TestAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Create in-memory JWT API")
-	cache, rmock := redismock.NewClientMock()
+	redis, rmock := redismock.NewClientMock()
 
 	t.Logf("Create handler")
 	handler, err := api.NewHandler(
 		database,
-		cache,
+		redis,
 		[]byte(hmacSecret),
 	)
 	assert.NoError(t, err)

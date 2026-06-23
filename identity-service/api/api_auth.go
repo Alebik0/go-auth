@@ -41,7 +41,7 @@ func (handler *Handler) Register(context *gin.Context) {
 	query := "SELECT id, login, password_hash, profile_id FROM auth WHERE login = $1;"
 	authData := data.AuthData{}
 	err := handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, parameters.Login).
 		Scan(&authData.ID, &authData.Login, &authData.PasswordHash, &authData.ProfileID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -69,7 +69,7 @@ func (handler *Handler) Register(context *gin.Context) {
 	log.Printf("Create new profile")
 
 	log.Printf("Begin transaction")
-	tx, err := handler.database.Begin()
+	tx, err := handler.PostgresDatabase.Begin()
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -89,7 +89,7 @@ func (handler *Handler) Register(context *gin.Context) {
 		Description: "",
 	}
 	err = handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, userData.Name, userData.Description).
 		Scan(&userData.ID)
 	if err != nil {
@@ -106,7 +106,7 @@ func (handler *Handler) Register(context *gin.Context) {
 		ProfileID:    userData.ID,
 	}
 	err = handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, authData.Login, authData.PasswordHash, authData.ProfileID).
 		Scan(&userData.ID)
 	if err != nil {
@@ -123,7 +123,7 @@ func (handler *Handler) Register(context *gin.Context) {
 	}
 
 	log.Printf("Generate access token")
-	accessToken, err := generateAccessToken(handler.hmacSecret, strconv.FormatInt(int64(userData.ID), 10))
+	accessToken, err := generateAccessToken(handler.HmacSecret, strconv.FormatInt(int64(userData.ID), 10))
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -140,7 +140,7 @@ func (handler *Handler) Register(context *gin.Context) {
 
 	log.Printf("Save token: key=%s, value=%d", refreshToken, userData.ID)
 	err = handler.
-		cache.
+		RedisDatabase.
 		Set(
 			context.Request.Context(),
 			"token:"+refreshToken,
@@ -204,7 +204,7 @@ func (handler *Handler) Login(context *gin.Context) {
 	authData := data.AuthData{}
 	userData := data.UserData{}
 	err := handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, parameters.Login).
 		Scan(
 			&authData.ID,
@@ -232,7 +232,7 @@ func (handler *Handler) Login(context *gin.Context) {
 	}
 
 	log.Printf("Generate access token")
-	accessToken, err := generateAccessToken(handler.hmacSecret, strconv.FormatInt(int64(userData.ID), 10))
+	accessToken, err := generateAccessToken(handler.HmacSecret, strconv.FormatInt(int64(userData.ID), 10))
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})
@@ -249,7 +249,7 @@ func (handler *Handler) Login(context *gin.Context) {
 
 	log.Printf("Save token: key=%s, value=%d", refreshToken, userData.ID)
 	err = handler.
-		cache.
+		RedisDatabase.
 		Set(
 			context.Request.Context(),
 			"token:"+refreshToken,
@@ -301,7 +301,7 @@ func (handler *Handler) Logout(context *gin.Context) {
 
 	log.Printf("Revert token: key=%s", refreshToken)
 	err = handler.
-		cache.
+		RedisDatabase.
 		Del(
 			context.Request.Context(),
 			"token:"+refreshToken,
@@ -349,7 +349,7 @@ func (handler *Handler) Refresh(context *gin.Context) {
 
 	log.Printf("Get token: key=%s", refreshToken)
 	result, err := handler.
-		cache.
+		RedisDatabase.
 		Get(
 			context.Request.Context(),
 			"token:"+refreshToken,
@@ -361,7 +361,7 @@ func (handler *Handler) Refresh(context *gin.Context) {
 		return
 	}
 
-	accessToken, err := generateAccessToken(handler.hmacSecret, result)
+	accessToken, err := generateAccessToken(handler.HmacSecret, result)
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error"})

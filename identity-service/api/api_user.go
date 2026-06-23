@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/alebik0/go-auth/identity-service/data"
+	"github.com/alebik0/go-auth/identity-service/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,25 +24,15 @@ import (
 func (handler *Handler) ReadMyUser(context *gin.Context) {
 	log.Printf("Read authentificated user")
 
-	log.Printf("Check permissions")
-	if !handler.isUser(context) {
-		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-		return
-	}
-
-	log.Printf("Load authorized user data")
-	userID, err := handler.getUserID(context)
-	if err != nil {
-		context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-		return
-	}
+	authorizedUser := context.
+		MustGet(middleware.AuthorizedUserKey).(middleware.AuthorizedUser)
 
 	log.Printf("Read my user")
 	query := "SELECT id, name, description FROM users WHERE id = $1;"
 	userData := data.UserData{}
-	err = handler.
-		database.
-		QueryRow(query, userID).
+	err := handler.
+		PostgresDatabase.
+		QueryRow(query, authorizedUser.UserID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 
 	if errors.Is(err, sql.ErrNoRows) {
@@ -81,7 +72,7 @@ func (handler *Handler) ReadUser(context *gin.Context) {
 	query := "SELECT id, name, description FROM users WHERE id = $1;"
 	userData := data.UserData{}
 	err = handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 
@@ -122,21 +113,11 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 	}
 
 	log.Printf("Check permissions")
-	if !handler.isAdmin(context) {
-		if !handler.isUser(context) {
-			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-			return
-		} else {
-			userID, err := handler.getUserID(context)
-			if err != nil {
-				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-				return
-			}
-			if userID != parameters.ID {
-				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-				return
-			}
-		}
+	authorizedUser := context.
+		MustGet(middleware.AuthorizedUserKey).(middleware.AuthorizedUser)
+	if authorizedUser.UserID != parameters.ID {
+		context.JSON(http.StatusForbidden, gin.H{"error": "not enough permissions"})
+		return
 	}
 
 	log.Printf("Load body parameters")
@@ -150,7 +131,7 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 	query := "UPDATE users SET name = $1, description = $2 WHERE id=$3 RETURNING id, name, description;"
 	userData := data.UserData{}
 	err := handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, body.Name, body.Description, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -189,28 +170,18 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 	}
 
 	log.Printf("Check permissions")
-	if !handler.isAdmin(context) {
-		if !handler.isUser(context) {
-			context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-			return
-		} else {
-			userID, err := handler.getUserID(context)
-			if err != nil {
-				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-				return
-			}
-			if userID != parameters.ID {
-				context.JSON(http.StatusForbidden, gin.H{"error": "Not enough permissions"})
-				return
-			}
-		}
+	authorizedUser := context.
+		MustGet(middleware.AuthorizedUserKey).(middleware.AuthorizedUser)
+	if authorizedUser.UserID != parameters.ID {
+		context.JSON(http.StatusForbidden, gin.H{"error": "not enough permissions"})
+		return
 	}
 
 	log.Printf("Delete user")
 	query := "DELETE FROM users WHERE id=$1 RETURNING id, name, description;"
 	userData := data.UserData{}
 	err := handler.
-		database.
+		PostgresDatabase.
 		QueryRow(query, parameters.ID).
 		Scan(&userData.ID, &userData.Name, &userData.Description)
 	if errors.Is(err, sql.ErrNoRows) {
