@@ -207,6 +207,18 @@ const docTemplate = `{
                             "$ref": "#/definitions/api.APIError"
                         }
                     },
+                    "401": {
+                        "description": "Not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Not enough permissions",
+                        "schema": {
+                            "$ref": "#/definitions/api.APIError"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
