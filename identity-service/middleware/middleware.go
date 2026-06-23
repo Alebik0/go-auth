@@ -31,7 +31,7 @@ func RequireAuth(hmacSecret []byte) gin.HandlerFunc {
 		accessToken := context.GetHeader(AuthorizationHeader)
 		if !strings.HasPrefix(accessToken, AuthorizationPrefix) {
 			log.Printf("[ERROR] not authorized: bearer prefix expected, actual: %s", accessToken)
-			context.JSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
 			return
 		}
 
@@ -48,14 +48,14 @@ func RequireAuth(hmacSecret []byte) gin.HandlerFunc {
 		)
 		if err != nil {
 			log.Printf("[ERROR] not authorized: %v", err)
-			context.JSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
 			return
 		}
 
 		userId, err := strconv.ParseUint(claims.Subject, 10, 32)
 		if err != nil {
 			log.Printf("[ERROR] not authorized: %v", err)
-			context.JSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
 			return
 		}
 
@@ -85,6 +85,6 @@ func RequireAnyRole(roles ...Role) gin.HandlerFunc {
 			}
 		}
 
-		context.JSON(http.StatusForbidden, gin.H{"error": "not enough permissions"})
+		context.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not enough permissions"})
 	}
 }

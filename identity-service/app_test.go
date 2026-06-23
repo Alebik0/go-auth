@@ -33,6 +33,7 @@ type ApiTest struct {
 }
 
 func (apiTest *ApiTest) register(id uint32, login, password string, t *testing.T) {
+	t.Logf("ApiTest.register")
 	t.Logf("Prepare mock")
 	apiTest.Pmock.
 		ExpectQuery(
@@ -106,11 +107,13 @@ func (apiTest *ApiTest) register(id uint32, login, password string, t *testing.T
 		t.Error(err)
 	}
 
+	t.Logf("Update cookies")
 	apiTest.Cookies = append(apiTest.Cookies, cookies...)
 	apiTest.Authorization = response.AccessToken
 }
 
 func (apiTest *ApiTest) expect(id uint32, name, description string, expect data.UserData, t *testing.T) {
+	t.Logf("ApiTest.expect")
 	t.Logf("Prepare mock")
 	apiTest.Pmock.
 		ExpectQuery(
@@ -154,6 +157,82 @@ func (apiTest *ApiTest) expect(id uint32, name, description string, expect data.
 	if err := apiTest.Rmock.ExpectationsWereMet(); err != nil {
 		t.Error(err)
 	}
+
+	t.Logf("Update cookies")
+	cookies := responseWriter.Result().Cookies()
+	apiTest.Cookies = append(apiTest.Cookies, cookies...)
+}
+
+func (apiTest *ApiTest) expect401(t *testing.T) {
+	t.Logf("ApiTest.expect401")
+
+	t.Logf("GET /api/v1/users/my")
+	body := http.NoBody
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/users/my", body)
+	for _, c := range apiTest.Cookies {
+		request.AddCookie(c)
+	}
+	request.Header.Add("Authorization", "Bearer "+apiTest.Authorization)
+
+	responseWriter := httptest.NewRecorder()
+
+	apiTest.Router.ServeHTTP(responseWriter, request)
+
+	if responseWriter.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d, body: %s", responseWriter.Code, responseWriter.Body.Bytes())
+	}
+
+	if err := apiTest.Pmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	if err := apiTest.Rmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("Update cookies")
+	cookies := responseWriter.Result().Cookies()
+	apiTest.Cookies = append(apiTest.Cookies, cookies...)
+}
+
+func (apiTest *ApiTest) logout(t *testing.T) {
+	t.Logf("ApiTest.logout")
+	t.Logf("Prepare mock")
+
+	t.Logf("Prepare redis mock")
+	apiTest.Rmock.
+		Regexp().
+		ExpectDel(`^token:.+$`).
+		SetVal(1)
+
+	t.Logf("POST /api/v1/auth/logout")
+	body := http.NoBody
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", body)
+	for _, c := range apiTest.Cookies {
+		request.AddCookie(c)
+	}
+	request.Header.Add("Authorization", "Bearer "+apiTest.Authorization)
+
+	responseWriter := httptest.NewRecorder()
+
+	apiTest.Router.ServeHTTP(responseWriter, request)
+
+	if responseWriter.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d, body: %s", responseWriter.Code, responseWriter.Body.Bytes())
+	}
+
+	if err := apiTest.Pmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	if err := apiTest.Rmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("Update cookies")
+	cookies := responseWriter.Result().Cookies()
+	apiTest.Cookies = append(apiTest.Cookies, cookies...)
+	apiTest.Authorization = ""
 }
 
 func NewApiTest(t *testing.T) (ApiTest, error) {
@@ -193,7 +272,7 @@ func NewApiTest(t *testing.T) (ApiTest, error) {
 	}, nil
 }
 
-func TestAuth(t *testing.T) {
+func TestRegister(t *testing.T) {
 	apiTest, err := NewApiTest(t)
 	assert.NoError(t, err)
 
@@ -212,4 +291,28 @@ func TestAuth(t *testing.T) {
 		},
 		t,
 	)
+}
+
+func TestLogout(t *testing.T) {
+	apiTest, err := NewApiTest(t)
+	assert.NoError(t, err)
+
+	var id uint32 = 1
+	login := "username"
+	password := "passwd"
+
+	apiTest.register(id, login, password, t)
+	apiTest.expect(
+		id,
+		login,
+		"",
+		data.UserData{
+			ID:          id,
+			Name:        login,
+			Description: "",
+		},
+		t,
+	)
+	apiTest.logout(t)
+	apiTest.expect401(t)
 }

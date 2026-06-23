@@ -19,6 +19,8 @@ import (
 // @Param 		X-User-ID header string true "Authorized user ID"
 // @Param 		X-User-Role header string true "Authorized user roles"
 // @Failure     400 {object} APIError "Bad request"
+// @Failure     401 {object} APIError "Not authorized"
+// @Failure     403 {object} APIError "Not enough permissions"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /api/v1/users/my [get]
 func (handler *Handler) ReadMyUser(context *gin.Context) {
