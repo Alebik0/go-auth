@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -17,24 +18,155 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-jose/go-jose/v4/testutils/assert"
 
-	"github.com/go-openapi/testify/v2/require"
 	_ "github.com/lib/pq" // To register the driver.
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-redis/redismock/v9"
 )
 
-func TestAuth(t *testing.T) {
+type ApiTest struct {
+	Pmock         sqlmock.Sqlmock
+	Rmock         redismock.ClientMock
+	Cookies       []*http.Cookie
+	Authorization string
+	Router        *gin.Engine
+}
+
+func (apiTest *ApiTest) register(id uint32, login, password string, t *testing.T) {
+	t.Logf("Prepare mock")
+	apiTest.Pmock.
+		ExpectQuery(
+			regexp.QuoteMeta(
+				"SELECT id, login, password_hash, profile_id FROM auth WHERE login = $1;",
+			),
+		).
+		WithArgs(login).
+		WillReturnError(sql.ErrNoRows)
+	apiTest.Pmock.ExpectBegin()
+	apiTest.Pmock.
+		ExpectQuery(
+			regexp.QuoteMeta(
+				"INSERT INTO users (name, description) VALUES ($1, $2) RETURNING id;",
+			),
+		).
+		WithArgs(login, "").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
+	apiTest.Pmock.
+		ExpectQuery(
+			regexp.QuoteMeta(
+				"INSERT INTO auth (login, password_hash, profile_id) VALUES ($1, $2, $3) RETURNING id;",
+			),
+		).
+		WithArgs(login, sqlmock.AnyArg(), 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(id))
+	apiTest.Pmock.ExpectCommit()
+
+	t.Logf("Prepare redis mock")
+	apiTest.Rmock.
+		Regexp().
+		ExpectSet(`^token:.+$`, strconv.FormatUint(uint64(id), 10), 30*24*time.Hour).
+		SetVal("OK")
+
+	t.Logf("POST /api/v1/auth/register")
+	body := strings.NewReader(fmt.Sprintf(`{"login":"%s", "password":"%s"}`, login, password))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", body)
+	for _, c := range apiTest.Cookies {
+		request.AddCookie(c)
+	}
+	request.Header.Add("Authorization", "Bearer "+apiTest.Authorization)
+	responseWriter := httptest.NewRecorder()
+
+	apiTest.Router.ServeHTTP(responseWriter, request)
+
+	if responseWriter.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", responseWriter.Code)
+	}
+
+	var response api.RegisterResponse
+	err := json.Unmarshal(responseWriter.Body.Bytes(), &response)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cookies := responseWriter.Result().Cookies()
+
+	if len(cookies) != 1 {
+		t.Fatal("expected one cookie")
+	}
+
+	if cookies[0].Name != "refresh_token" {
+		t.Fatal("wrong cookie")
+	}
+
+	if err := apiTest.Pmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	if err := apiTest.Rmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	apiTest.Cookies = append(apiTest.Cookies, cookies...)
+	apiTest.Authorization = response.AccessToken
+}
+
+func (apiTest *ApiTest) expect(id uint32, name, description string, expect data.UserData, t *testing.T) {
+	t.Logf("Prepare mock")
+	apiTest.Pmock.
+		ExpectQuery(
+			regexp.QuoteMeta(
+				"SELECT id, name, description FROM users WHERE id = $1;",
+			),
+		).
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description"}).AddRow(id, name, description))
+
+	t.Logf("GET /api/v1/users/my")
+	body := http.NoBody
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/users/my", body)
+	for _, c := range apiTest.Cookies {
+		request.AddCookie(c)
+	}
+	request.Header.Add("Authorization", "Bearer "+apiTest.Authorization)
+
+	responseWriter := httptest.NewRecorder()
+
+	apiTest.Router.ServeHTTP(responseWriter, request)
+
+	if responseWriter.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d, body: %s", responseWriter.Code, responseWriter.Body.Bytes())
+	}
+
+	var response data.UserData
+	err := json.Unmarshal(responseWriter.Body.Bytes(), &response)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(response, expect) {
+		t.Fatalf("got %+v want %+v", response, expect)
+	}
+
+	if err := apiTest.Pmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+
+	if err := apiTest.Rmock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+}
+
+func NewApiTest(t *testing.T) (ApiTest, error) {
 	gin.SetMode(gin.TestMode)
 
 	t.Logf("Prepare data")
 	hmacSecret := "qweqeqwioueqiewuio"
-	login := "username"
-	password := "passwd"
 
 	t.Logf("Create postgres API mock")
 	database, mock, err := sqlmock.New()
-	require.NoError(t, err)
+	if err != nil {
+		return ApiTest{}, err
+	}
 
 	t.Logf("Create in-memory JWT API")
 	redis, rmock := redismock.NewClientMock()
@@ -45,136 +177,39 @@ func TestAuth(t *testing.T) {
 		redis,
 		[]byte(hmacSecret),
 	)
-	assert.NoError(t, err)
+	if err != nil {
+		return ApiTest{}, err
+	}
 
 	t.Logf("Setup router")
 	router := SetupRouter(handler)
-	globalCookies := make([]*http.Cookie, 0)
-	authorization := ""
 
-	{
-		t.Logf("Prepare mock")
-		mock.
-			ExpectQuery(
-				regexp.QuoteMeta(
-					"SELECT id, login, password_hash, profile_id FROM auth WHERE login = $1;",
-				),
-			).
-			WithArgs(login).
-			WillReturnError(sql.ErrNoRows)
-		mock.ExpectBegin()
-		mock.
-			ExpectQuery(
-				regexp.QuoteMeta(
-					"INSERT INTO users (name, description) VALUES ($1, $2) RETURNING id;",
-				),
-			).
-			WithArgs(login, "").
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-		mock.
-			ExpectQuery(
-				regexp.QuoteMeta(
-					"INSERT INTO auth (login, password_hash, profile_id) VALUES ($1, $2, $3) RETURNING id;",
-				),
-			).
-			WithArgs(login, sqlmock.AnyArg(), 1).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-		mock.ExpectCommit()
+	return ApiTest{
+		Pmock:         mock,
+		Rmock:         rmock,
+		Cookies:       make([]*http.Cookie, 0),
+		Authorization: "",
+		Router:        router,
+	}, nil
+}
 
-		t.Logf("Prepare redis mock")
-		rmock.
-			Regexp().
-			ExpectSet(`^token:.+$`, "1", 30*24*time.Hour).
-			SetVal("OK")
+func TestAuth(t *testing.T) {
+	apiTest, err := NewApiTest(t)
+	assert.NoError(t, err)
 
-		t.Logf("POST /api/v1/auth/register")
-		body := strings.NewReader(fmt.Sprintf(`{"login":"%s", "password":"%s"}`, login, password))
-		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", body)
-		responseWriter := httptest.NewRecorder()
+	login := "username"
+	password := "passwd"
 
-		router.ServeHTTP(responseWriter, request)
-
-		if responseWriter.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d", responseWriter.Code)
-		}
-
-		var response api.RegisterResponse
-		err = json.Unmarshal(responseWriter.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		cookies := responseWriter.Result().Cookies()
-
-		if len(cookies) != 1 {
-			t.Fatal("expected one cookie")
-		}
-
-		if cookies[0].Name != "refresh_token" {
-			t.Fatal("wrong cookie")
-		}
-
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
-
-		if err := rmock.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
-
-		globalCookies = append(globalCookies, cookies...)
-		authorization = response.AccessToken
-	}
-
-	{
-		t.Logf("Prepare mock")
-		mock.
-			ExpectQuery(
-				regexp.QuoteMeta(
-					"SELECT id, name, description FROM users WHERE id = $1;",
-				),
-			).
-			WithArgs(1).
-			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description"}).AddRow(1, login, ""))
-
-		t.Logf("GET /api/v1/users/my")
-		body := http.NoBody
-		request := httptest.NewRequest(http.MethodGet, "/api/v1/users/my", body)
-		for _, c := range globalCookies {
-			request.AddCookie(c)
-		}
-		request.Header.Add("Authorization", "Bearer "+authorization)
-
-		responseWriter := httptest.NewRecorder()
-
-		router.ServeHTTP(responseWriter, request)
-
-		if responseWriter.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d, body: %s", responseWriter.Code, responseWriter.Body.Bytes())
-		}
-
-		var response data.UserData
-		err = json.Unmarshal(responseWriter.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		expected := data.UserData{
+	apiTest.register(1, login, password, t)
+	apiTest.expect(
+		1,
+		login,
+		"",
+		data.UserData{
 			ID:          1,
 			Name:        login,
 			Description: "",
-		}
-
-		if !reflect.DeepEqual(response, expected) {
-			t.Fatalf("got %+v want %+v", response, expected)
-		}
-
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
-
-		if err := rmock.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
-	}
+		},
+		t,
+	)
 }
