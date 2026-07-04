@@ -17,12 +17,14 @@ function RegisterPage() {
   useEffect(() => {
     usersApi
       .getMe()
-      .then((response) => router.push(`/user/my`))
+      .then(() => router.push(`/user/my`))
       .catch(() => setLoginState(LoginState.LOGOUT));
   }, [router]);
 
   return (
     <>
+      {loginState == LoginState.LOADING && <p>Loading...</p>}
+      {loginState == LoginState.LOGOUT && <p>Loading...</p>}
       <LoginForm />
     </>
   );
