@@ -12,6 +12,7 @@ import (
 	"github.com/alebik0/go-auth/identity-service/api"
 	"github.com/alebik0/go-auth/identity-service/docs"
 	"github.com/alebik0/go-auth/identity-service/middleware"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -31,6 +32,8 @@ import (
 
 func SetupRouter(handler api.Handler) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.Default())
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	v1 := router.Group("/api/v1")
