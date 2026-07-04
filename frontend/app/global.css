@@ -1,1 +1,153 @@
 @import "tailwindcss";
+
+.surface {
+  background: var(--md-sys-color-surface);
+}
+
+.on-surface {
+  color: var(--md-sys-color-on-surface);
+}
+
+.surface-variant {
+  background: var(--md-sys-color-surface-variant);
+}
+
+.on-surface-variant {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.inverse-surface {
+  background: var(--md-sys-color-inverse-surface);
+}
+
+.on-inverse-surface {
+  color: var(--md-sys-color-inverse-on-surface);
+}
+
+.primary {
+  background: var(--md-sys-color-primary);
+}
+
+.on-primary {
+  color: var(--md-sys-color-on-primary);
+}
+
+.secondary {
+  background: var(--md-sys-color-secondary);
+}
+
+.on-secondary {
+  color: var(--md-sys-color-on-secondary);
+}
+
+.tertiary {
+  background: var(--md-sys-color-tertiary);
+}
+
+.on-tertiary {
+  color: var(--md-sys-color-on-tertiary);
+}
+
+.error {
+  background: var(--md-sys-color-error);
+}
+
+.on-error {
+  color: var(--md-sys-color-on-error);
+}
+
+.primary-container {
+  background: var(--md-sys-color-primary-container);
+}
+
+.on-primary-container {
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.secondary-container {
+  background: var(--md-sys-color-secondary-container);
+}
+
+.on-secondary-container {
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.tertiary-container {
+  background: var(--md-sys-color-tertiary-container);
+}
+
+.on-tertiary-container {
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.error-container {
+  background: var(--md-sys-color-error-container);
+}
+
+.on-error-container {
+  color: var(--md-sys-color-on-error-container);
+}
+
+.outline {
+  outline-color: var(--md-sys-color-outline);
+}
+
+.outline-variant {
+  outline-color: var(--md-sys-color-outline-variant);
+}
+
+.focus-primary-outline:focus {
+  border-color: var(--md-sys-color-primary);
+}
+
+.focus-primary-container:focus {
+  background: var(--md-sys-color-primary-container);
+}
+
+.focus-on-primary-container:focus {
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.focus-secondary-container:focus {
+  background: var(--md-sys-color-secondary-container);
+}
+
+.focus-on-secondary-container:focus {
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.focus-tertiary-container:focus {
+  background: var(--md-sys-color-tertiary-container);
+}
+
+.focus-on-tertiary-container:focus {
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.hover-primary-outline:hover {
+  border-color: var(--md-sys-color-primary);
+}
+
+.hover-primary-container:hover {
+  background: var(--md-sys-color-primary-container);
+}
+
+.hover-on-primary-container:hover {
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.hover-secondary-container:hover {
+  background: var(--md-sys-color-secondary-container);
+}
+
+.hover-on-secondary-container:hover {
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.hover-tertiary-container:hover {
+  background: var(--md-sys-color-tertiary-container);
+}
+
+.hover-on-tertiary-container:hover {
+  color: var(--md-sys-color-on-tertiary-container);
+}

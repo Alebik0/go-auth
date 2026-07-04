@@ -58,16 +58,16 @@ function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-md rounded-[25px] bg-[#1A1D24] border border-[#2A2F38] p-8 shadow-2xl"
+      className="surface outline w-full max-w-md rounded-[25px] border p-8"
     >
-      <h1 className="mb-8 text-center text-3xl font-bold text-white">
+      <h1 className="on-surface mb-8 text-center text-3xl font-bold">
         Sign In
       </h1>
 
       <div className="mb-6">
         <label
           htmlFor="login"
-          className="mb-2 block text-sm font-medium text-gray-300"
+          className="on-surface mb-2 block text-sm font-medium"
         >
           Login
         </label>
@@ -79,19 +79,19 @@ function LoginForm() {
           maxLength={32}
           autoComplete="username"
           onChange={(e) => setLogin(e.target.value)}
-          className="w-full rounded-[25px] border border-gray-700 bg-[#12151B] px-5 py-3 text-white outline-none transition focus:border-[#A0D49B] focus:ring-2 focus:ring-[#A0D49B]/30"
+          className="surface-variant on-surface-variant outline border-1 m-[1px] w-full rounded-[25px] px-5 py-3 outline-none transition-colors duration-150 ease-in-out focus-primary-outline focus:border-2 focus:m-0"
           placeholder="Enter your login"
         />
 
         {errors.login && (
-          <p className="mt-2 text-sm text-red-400">{errors.login}</p>
+          <p className="on-error-container mt-2 text-sm">{errors.login}</p>
         )}
       </div>
 
       <div className="mb-8">
         <label
           htmlFor="password"
-          className="mb-2 block text-sm font-medium text-gray-300"
+          className="on-surface mb-2 block text-sm font-medium"
         >
           Password
         </label>
@@ -103,23 +103,23 @@ function LoginForm() {
           maxLength={64}
           autoComplete="current-password"
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-[25px] border border-gray-700 bg-[#12151B] px-5 py-3 text-white outline-none transition focus:border-[#A0D49B] focus:ring-2 focus:ring-[#A0D49B]/30"
+          className="surface-variant on-surface-variant border-1 m-[1px] w-full rounded-[25px] px-5 py-3 outline-none transition-colors duration-150 ease-in-out focus-primary-outline focus:border-2 focus:m-0"
           placeholder="Enter your password"
         />
 
         {errors.password && (
-          <p className="mt-2 text-sm text-red-400">{errors.password}</p>
+          <p className="on-error-container mt-2 text-sm">{errors.password}</p>
         )}
       </div>
 
       <button
         type="submit"
-        className="w-full rounded-[25px] bg-[#A0D49B] px-5 py-3 font-semibold text-black transition hover:brightness-110 active:scale-[0.98]"
+        className="primary-container on-primary-container w-full rounded-[25px] px-5 py-3 font-semibold text-black transition-all duration-150 ease-in-out hover-secondary-container hover-on-secondary-container"
       >
         Sign In
       </button>
       {errors.submit && (
-        <p className="mt-2 text-sm text-red-400">{errors.submit}</p>
+        <p className="on-error-container mt-2 text-sm">{errors.submit}</p>
       )}
     </form>
   );

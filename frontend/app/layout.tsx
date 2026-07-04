@@ -1,4 +1,12 @@
 import type { Metadata } from "next";
+import Themed from "@/components/Themed";
+
+import "./light.css";
+import "./light-hc.css";
+import "./light-mc.css";
+import "./dark.css";
+import "./dark-hc.css";
+import "./dark-mc.css";
 import "./global.css";
 
 export const metadata: Metadata = {
@@ -14,9 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body>
-        <main className="min-h-screen bg-[#0F1115] flex items-center justify-center px-4">
-          {children}
-        </main>
+        <Themed>{children}</Themed>
       </body>
     </html>
   );
