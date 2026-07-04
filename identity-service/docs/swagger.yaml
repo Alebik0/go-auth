@@ -29,8 +29,7 @@ definitions:
     type: object
 host: localhost:8081
 info:
-  contact:
-    name: Alebik0
+  contact: {}
   description: Identity service API, that provides authentification functionality,
     session control via JWT tokens and user management.
   license:

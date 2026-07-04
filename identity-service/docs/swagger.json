@@ -3,9 +3,7 @@
     "info": {
         "description": "Identity service API, that provides authentification functionality, session control via JWT tokens and user management.",
         "title": "Identity service",
-        "contact": {
-            "name": "Alebik0"
-        },
+        "contact": {},
         "license": {
             "name": "MIT",
             "url": "https://mit-license.org"
