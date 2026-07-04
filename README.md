@@ -24,7 +24,7 @@ Authentification and inner API expose
 
 - [x] Test Redis
 - [x] Test user authorization via JWT tokens
-- [ ] CORS support
+- [x] CORS support
 - [ ] CSRF protection
 
 ### User service
