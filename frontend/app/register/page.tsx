@@ -12,7 +12,7 @@ enum LoginState {
 
 function RegisterPage() {
   const router = useRouter();
-  const [loginState, setLoginState] = useState(LoginState.LOADING);
+  const [, setLoginState] = useState(LoginState.LOADING);
 
   useEffect(() => {
     usersApi
@@ -21,13 +21,7 @@ function RegisterPage() {
       .catch(() => setLoginState(LoginState.LOGOUT));
   }, [router]);
 
-  return (
-    <>
-      {loginState == LoginState.LOADING && <p>Loading...</p>}
-      {loginState == LoginState.LOGOUT && <p>Loading...</p>}
-      <LoginForm />
-    </>
-  );
+  return <LoginForm />;
 }
 
 export default RegisterPage;
