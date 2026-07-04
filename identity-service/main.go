@@ -22,8 +22,6 @@ import (
 // @version         1.0
 // @description     Identity service API, that provides authentification functionality, session control via JWT tokens and user management.
 
-// @contact.name Alebik0
-
 // @license.name MIT
 // @license.url  https://mit-license.org
 
