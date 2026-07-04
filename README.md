@@ -1,6 +1,6 @@
 # User authentification on Go
 
-Testing web site written on Go to test authentification. 
+Testing web site written on Go to test authentification.
 
 ## Architecture
 
@@ -8,13 +8,16 @@ Just a simple microservice architecture, that can be seen on that image:
 
 ![Project architecture](./diagrams/Services%20Diagram.png)
 
-### Frontend 
+### Frontend
 
 Just a simple web application
 
 #### Tasks:
 
-- [ ] Run frontend via React + Vite
+- [x] Learn base React
+- [x] Learn base NextJS
+- [x] Learn base Axios library
+- [ ] Run frontend via NextJS + Vite
 
 ### API Gateway
 
