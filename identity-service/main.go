@@ -52,7 +52,7 @@ func SetupRouter(handler api.Handler) *gin.Engine {
 			"Content-Length",
 		},
 		AllowCredentials: true, // if using cookies
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
