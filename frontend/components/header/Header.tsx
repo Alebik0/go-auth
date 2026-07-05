@@ -1,7 +1,7 @@
 "use server";
 
-import Link from "next/link";
-import ThemeButton from "./ThemeButton";
+import ThemeButton from "../ThemeButton";
+import UserManagement from "./UserManagement";
 
 async function Header({ theme }: Readonly<{ theme: string }>) {
   return (
@@ -10,13 +10,7 @@ async function Header({ theme }: Readonly<{ theme: string }>) {
 
       <div className="flex items-center gap-4">
         <ThemeButton theme={theme} />
-
-        <Link
-          href="/logout"
-          className="surface-variant on-surface-variant outline rounded border px-3 py-2 text-sm"
-        >
-          Logout
-        </Link>
+        <UserManagement />
       </div>
     </>
   );

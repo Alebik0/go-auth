@@ -1,25 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { UserData, usersApi } from "@/lib/api";
+import { useEffect } from "react";
+import { usersApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/app/contexts/UserContext";
 
 import UserCardSkeleton from "@/components/UserCardSkeleton";
 import UserCard from "@/components/UserCard";
 
 function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
+  const userState = useUserStore((s) => s.state);
+  const setUser = useUserStore((s) => s.setUser);
 
   useEffect(() => {
     usersApi
       .getMe()
-      .then((response) => setUser(response.data as UserData))
+      .then((response) => setUser(response.data))
       .catch((error) => {
         switch (error.response?.status) {
           case 401:
             // Not logined
-            router.push("/register");
+            setUser(null);
             break;
           default:
             // Internal error
@@ -28,14 +30,13 @@ function ProfilePage() {
             break;
         }
       });
-  }, [router]);
+  }, [router, setUser]);
 
-  return (
-    <>
-      {!user && <UserCardSkeleton />}
-      {user && <UserCard user={user} />}
-    </>
-  );
+  if (userState.loading) {
+    return <UserCardSkeleton />;
+  }
+
+  return <>{userState.user != null && <UserCard user={userState.user} />}</>;
 }
 
 export default ProfilePage;

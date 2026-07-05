@@ -3,16 +3,24 @@
 import { useEffect } from "react";
 import { authApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "../contexts/UserContext";
 
 function LogoutPage() {
   const router = useRouter();
+  const setUser = useUserStore((s) => s.setUser);
 
   useEffect(() => {
     authApi
       .logout()
-      .then(() => router.push("/register"))
-      .catch(() => router.push("/register"));
-  }, [router]);
+      .then(() => {
+        setUser(null);
+        router.push("/register");
+      })
+      .catch(() => {
+        setUser(null);
+        router.push("/register");
+      });
+  }, [router, setUser]);
 
   return <></>;
 }

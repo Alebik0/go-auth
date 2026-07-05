@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import Header from "./Header";
+import Header from "./header/Header";
 
 const themes = [
   "light",

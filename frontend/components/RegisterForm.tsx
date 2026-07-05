@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { authApi } from "@/lib/api";
+import { authApi, usersApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/app/contexts/UserContext";
 
 function RegisterForm() {
   const router = useRouter();
@@ -11,6 +12,7 @@ function RegisterForm() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const setUser = useUserStore((s) => s.setUser);
 
   function clearErrors() {
     setLoginError(null);
@@ -57,7 +59,13 @@ function RegisterForm() {
         login: login,
         password: password,
       })
-      .then(() => router.push("/users/my"))
+      .then(() => {
+        usersApi
+          .getMe()
+          .then((response) => setUser(response.data))
+          .catch(() => setUser(null));
+        router.push("/users/my");
+      })
       .catch((error) => {
         switch (error.response?.status) {
           case 409:
