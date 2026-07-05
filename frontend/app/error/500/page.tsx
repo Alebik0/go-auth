@@ -1,11 +1,11 @@
 "use server";
 
-import Error500 from "@/components/Error500";
+import Error500Card from "@/components/errors/500/Error500Card";
 
 async function Page500() {
   return (
     <>
-      <Error500 />
+      <Error500Card />
     </>
   );
 }

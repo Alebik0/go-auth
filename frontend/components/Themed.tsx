@@ -22,10 +22,14 @@ async function Themed({ children }: Readonly<{ children: React.ReactNode }>) {
 
   return (
     <div className={theme}>
-      <Header theme={theme} />
-      <main className="surface min-h-screen flex items-center justify-center px-4">
-        {children}
-      </main>
+      <div className="surface min-h-screen min-h-screen flex flex-col justify-between">
+        <header className="shrink-0 surface outline flex items-center justify-between border-b px-6 py-4">
+          <Header theme={theme} />
+        </header>
+        <main className="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import ThemeButton from "./ThemeButton";
 
 async function Header({ theme }: Readonly<{ theme: string }>) {
   return (
-    <header className="surface outline flex items-center justify-between border-b px-6 py-4">
+    <>
       <h1 className="on-surface text-xl font-semibold">My App</h1>
 
       <div className="flex items-center gap-4">
@@ -18,7 +18,7 @@ async function Header({ theme }: Readonly<{ theme: string }>) {
           Logout
         </Link>
       </div>
-    </header>
+    </>
   );
 }
 
