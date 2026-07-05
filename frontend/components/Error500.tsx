@@ -1,6 +1,8 @@
+"use server";
+
 import Link from "next/link";
 
-function Error500() {
+async function Error500() {
   return (
     <div className="max-w-lg text-center">
       <div className="error-container mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full">
@@ -12,16 +14,16 @@ function Error500() {
         >
           <path
             d="
-    M32 8
-    Q34 8 35 10
-    L57 49
-    Q58 51 56 52
-    L8 52
-    Q6 51 7 49
-    L29 10
-    Q30 8 32 8
-    Z
-  "
+  M32 8
+  Q34 8 35 10
+  L57 49
+  Q58 51 56 52
+  L8 52
+  Q6 51 7 49
+  L29 10
+  Q30 8 32 8
+  Z
+"
             fill="#E53935"
             stroke="#B71C1C"
             strokeWidth="2"
@@ -53,13 +55,6 @@ function Error500() {
         >
           Go Home
         </Link>
-
-        <button
-          onClick={() => window.location.reload()}
-          className="surface-container on-surface-container ontline rounded-lg px-6 py-3 font-medium cursor-pointer transition hover-surface-container-highest"
-        >
-          Try Again
-        </button>
       </div>
 
       <p className="on-surface-variant mt-8 text-sm">
