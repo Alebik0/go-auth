@@ -5,8 +5,8 @@ import { usersApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/app/contexts/UserContext";
 
-import UserCardSkeleton from "@/components/UserCardSkeleton";
-import UserCard from "@/components/UserCard";
+import UserCardSkeleton from "@/components/users/UserCardSkeleton";
+import UserCard from "@/components/users/UserCard";
 
 function ProfilePage() {
   const router = useRouter();
