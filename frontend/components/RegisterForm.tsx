@@ -4,45 +4,51 @@ import { useState } from "react";
 import { authApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
-function LoginForm() {
+function RegisterForm() {
   const router = useRouter();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [errors, setErrors] = useState<{
-    login?: string;
-    password?: string;
-    submit?: string;
-  }>({});
+  function clearErrors() {
+    setLoginError(null);
+    setPasswordError(null);
+    setSubmitError(null);
+  }
 
-  const validate = () => {
-    const nextErrors: typeof errors = {};
+  function validate() {
+    let success = true;
 
     if (!login) {
-      nextErrors.login = "Login is required";
+      setLoginError("Login is required");
+      success = false;
     } else {
       if (login.length > 32) {
-        nextErrors.login = "Maximum length is 32 characters";
+        setLoginError("Maximum length is 32 characters");
+        success = false;
       }
 
       if (!/^[A-Za-z0-9]+$/.test(login)) {
-        nextErrors.login = "Only letters and digits are allowed";
+        setLoginError("Only letters and digits are allowed");
+        success = false;
       }
     }
 
     if (!password) {
-      nextErrors.password = "Password is required";
+      setPasswordError("Password is required");
+      success = false;
     } else if (password.length > 64) {
-      nextErrors.password = "Maximum length is 64 characters";
+      setPasswordError("Maximum length is 64 characters");
+      success = false;
     }
 
-    setErrors(nextErrors);
+    return success;
+  }
 
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
+  function handleSubmit(event: React.SubmitEvent) {
+    event.preventDefault();
 
     if (!validate()) return;
 
@@ -51,9 +57,20 @@ function LoginForm() {
         login: login,
         password: password,
       })
-      .then(() => router.push("/user/my"))
-      .catch(() => (errors.submit = "Failed to submit"));
-  };
+      .then(() => router.push("/users/my"))
+      .catch((error) => {
+        switch (error.response?.status) {
+          case 409:
+            // Login is already taken
+            setSubmitError("Login is already taken.");
+            break;
+          default:
+            // Internal error
+            setSubmitError("Internal error, try later.");
+            break;
+        }
+      });
+  }
 
   return (
     <form
@@ -78,13 +95,16 @@ function LoginForm() {
           value={login}
           maxLength={32}
           autoComplete="username"
-          onChange={(e) => setLogin(e.target.value)}
+          onChange={(e) => {
+            clearErrors();
+            setLogin(e.target.value);
+          }}
           className="surface-variant on-surface-variant outline border-1 m-[1px] w-full rounded-[25px] px-5 py-3 outline-none transition-colors duration-150 ease-in-out focus-primary-outline focus:border-2 focus:m-0"
           placeholder="Enter your login"
         />
 
-        {errors.login && (
-          <p className="on-error-container mt-2 text-sm">{errors.login}</p>
+        {loginError && (
+          <p className="on-error-container mt-2 text-sm">{loginError}</p>
         )}
       </div>
 
@@ -102,13 +122,16 @@ function LoginForm() {
           value={password}
           maxLength={64}
           autoComplete="current-password"
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            clearErrors();
+            setPassword(e.target.value);
+          }}
           className="surface-variant on-surface-variant border-1 m-[1px] w-full rounded-[25px] px-5 py-3 outline-none transition-colors duration-150 ease-in-out focus-primary-outline focus:border-2 focus:m-0"
           placeholder="Enter your password"
         />
 
-        {errors.password && (
-          <p className="on-error-container mt-2 text-sm">{errors.password}</p>
+        {passwordError && (
+          <p className="on-error-container mt-2 text-sm">{passwordError}</p>
         )}
       </div>
 
@@ -118,11 +141,11 @@ function LoginForm() {
       >
         Sign In
       </button>
-      {errors.submit && (
-        <p className="on-error-container mt-2 text-sm">{errors.submit}</p>
+      {submitError && (
+        <p className="on-error-container mt-2 text-sm">{submitError}</p>
       )}
     </form>
   );
 }
 
-export default LoginForm;
+export default RegisterForm;
