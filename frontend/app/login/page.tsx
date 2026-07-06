@@ -1,6 +1,6 @@
 "use server";
 
-import LoginForm from "@/components/LoginForm";
+import LoginForm from "@/components/auth/LoginForm";
 
 async function LoginPage() {
   return (

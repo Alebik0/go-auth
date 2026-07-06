@@ -14,11 +14,11 @@ function LogoutPage() {
       .logout()
       .then(() => {
         setUser(null);
-        router.push("/register");
+        router.push("/login");
       })
       .catch(() => {
         setUser(null);
-        router.push("/register");
+        router.push("/login");
       });
   }, [router, setUser]);
 

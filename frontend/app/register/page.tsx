@@ -1,6 +1,6 @@
 "use server";
 
-import RegisterForm from "@/components/RegisterForm";
+import RegisterForm from "@/components/auth/RegisterForm";
 
 async function RegisterPage() {
   return (
