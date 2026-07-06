@@ -23,10 +23,10 @@ function UserManagement() {
   if (userState.user == null) {
     return (
       <Link
-        href="/register"
+        href="/login"
         className="surface-variant on-surface-variant outline rounded border px-3 py-2 text-sm"
       >
-        Register
+        Login
       </Link>
     );
   }

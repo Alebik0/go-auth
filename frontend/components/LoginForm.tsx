@@ -7,7 +7,7 @@ import { authApi, usersApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/app/contexts/UserContext";
 
-function RegisterForm() {
+function LoginForm() {
   const router = useRouter();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +57,7 @@ function RegisterForm() {
     if (!validate()) return;
 
     authApi
-      .register({
+      .login({
         login: login,
         password: password,
       })
@@ -70,9 +70,9 @@ function RegisterForm() {
       })
       .catch((error) => {
         switch (error.response?.status) {
-          case 409:
+          case 404:
             // Login is already taken
-            setSubmitError("Login is already taken.");
+            setSubmitError("There is no user found.");
             break;
           default:
             // Internal error
@@ -86,7 +86,7 @@ function RegisterForm() {
     <div className="surface outline w-full max-w-md rounded-[25px] border p-8">
       <form onSubmit={handleSubmit}>
         <h1 className="on-surface mb-8 text-center text-3xl font-bold">
-          Create new account
+          Sign In
         </h1>
 
         <div className="mb-6">
@@ -156,14 +156,14 @@ function RegisterForm() {
 
       <div className="mt-5 text-center">
         <Link
-          href="/login"
+          href="/register"
           className="mx-auto on-primary-container font-medium transition hover-on-secondary-container"
         >
-          I already have an account.
+          Create new account.
         </Link>
       </div>
     </div>
   );
 }
 
-export default RegisterForm;
+export default LoginForm;
