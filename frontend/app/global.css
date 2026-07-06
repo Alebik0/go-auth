@@ -4,6 +4,34 @@
   background: var(--md-sys-color-surface);
 }
 
+.surface-container-dim {
+  background: var(--md-sys-color-surface-container-dim);
+}
+
+.surface-container-bright {
+  background: var(--md-sys-color-surface-container-bright);
+}
+
+.surface-container-lowest {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.surface-container-low {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.surface-container {
+  background: var(--md-sys-color-surface-container);
+}
+
+.surface-container-high {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.surface-container-highest {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
 .on-surface {
   color: var(--md-sys-color-on-surface);
 }
@@ -89,11 +117,43 @@
 }
 
 .outline {
-  outline-color: var(--md-sys-color-outline);
+  border-color: var(--md-sys-color-outline);
 }
 
 .outline-variant {
-  outline-color: var(--md-sys-color-outline-variant);
+  border-color: var(--md-sys-color-outline-variant);
+}
+
+.focus-surface:focus {
+  background: var(--md-sys-color-surface);
+}
+
+.focus-surface-container-dim:focus {
+  background: var(--md-sys-color-surface-container-dim);
+}
+
+.focus-surface-container-bright:focus {
+  background: var(--md-sys-color-surface-container-bright);
+}
+
+.focus-surface-container-lowest:focus {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.focus-surface-container-low:focus {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.focus-surface-container:focus {
+  background: var(--md-sys-color-surface-container);
+}
+
+.focus-surface-container-high:focus {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.focus-surface-container-highest:focus {
+  background: var(--md-sys-color-surface-container-highest);
 }
 
 .focus-primary-outline:focus {
@@ -122,6 +182,38 @@
 
 .focus-on-tertiary-container:focus {
   color: var(--md-sys-color-on-tertiary-container);
+}
+
+.hover-surface:hover {
+  background: var(--md-sys-color-surface);
+}
+
+.hover-surface-container-dim:hover {
+  background: var(--md-sys-color-surface-container-dim);
+}
+
+.hover-surface-container-bright:hover {
+  background: var(--md-sys-color-surface-container-bright);
+}
+
+.hover-surface-container-lowest:hover {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.hover-surface-container-low:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.hover-surface-container:hover {
+  background: var(--md-sys-color-surface-container);
+}
+
+.hover-surface-container-high:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.hover-surface-container-highest:hover {
+  background: var(--md-sys-color-surface-container-highest);
 }
 
 .hover-primary-outline:hover {

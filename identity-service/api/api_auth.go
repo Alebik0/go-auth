@@ -175,6 +175,7 @@ func (handler *Handler) Register(context *gin.Context) {
 // @Param   	parameters body LoginRequest true "Login parameters"
 // @Failure     400 {object} APIError "Bad request"
 // @Failure     401 {object} APIError "Unauthorized"
+// @Failure     404 {object} APIError "User not found"
 // @Failure     500 {object} APIError "Internal server error"
 // @Router      /api/v1/auth/login [post]
 func (handler *Handler) Login(context *gin.Context) {
@@ -227,7 +228,7 @@ func (handler *Handler) Login(context *gin.Context) {
 	log.Printf("Check if password is valid %s", parameters.Login)
 	err = bcrypt.CompareHashAndPassword([]byte(authData.PasswordHash), []byte(parameters.Password))
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		context.JSON(http.StatusNotFound, gin.H{"error": "Invalid password"})
 		return
 	}
 
